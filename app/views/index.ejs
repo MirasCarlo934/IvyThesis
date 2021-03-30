@@ -3,13 +3,153 @@
 
 <head>
     <title/><%= title %></title>
+    <style>
+        div.main {
+            border: 3px solid black;
+        }
+        div.layout {
+            border: 1px solid black;
+        }
+        div.descriptor {
+            border: 1px solid red;
+        }
+        .card {
+            width: 250px;
+        }
+    </style>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
 
 <body>
-<h1>
-    <%= title %>
-    <img src="img/testimg.png" alt="Test"/>
-</h1>
+<!--    <img src="img/testimg.png" alt="Test"/>-->
+<div class="layout-body container-fluid">
+    <h1>
+        <%= title %>
+    </h1>
+    <div class="layout-board layout">
+        <div class="descriptor">I am a board</div><br/>
+        <div class="d-flex p-2 layout">
+            <div class="category mr-5 main">
+                <div class="mb-4 descriptor">PENDING</div>
+                <div class="list main">
+                    <div class="mb-3 descriptor">Incoming bugs</div>
+                    <div class="p-3 layout">
+                        <div class="card p-2 mb-3 main">
+                            <div class="card-body">Lightbox loading issue on Safari</div>
+                            <div class="card-footer"><i>*logos/indicators*</i></div>
+                        </div>
+                        <div class="card p-2 mb-3 main">
+                            <div class="card-body">Notifications Not Sending #4</div>
+                            <div class="card-footer"><i>*logos/indicators*</i></div>
+                        </div>
+                        <div class="card p-2 mb-3 main">
+                            <div class="card-body">Tab to comment goes to wrong field</div>
+                            <div class="card-footer"><i>*logos/indicators*</i></div>
+                        </div>
+                        <div class="card p-2 mb-3 main">
+                            <div class="card-body">Video load issues on IE 11</div>
+                            <div class="card-footer"><i>*logos/indicators*</i></div>
+                        </div>
+                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category mr-5 main">
+                <div class="mb-4 descriptor">STARTED</div>
+                <div class="d-flex flex-column">
+                    <div class="section mb-4 main">
+                        <div class="descriptor">SMALLER WORK - <48 HR RESOLUTION</div>
+                        <div class="d-flex">
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">In Progress</div>
+                                <div class="p-3 layout">
+                                    <div class="card p-2 mb-3 main">
+                                        <div class="card-body">Localization</div>
+                                        <div class="card-footer"><i>*logos/indicators*</i></div>
+                                    </div>
+                                    <div class="card p-2 mb-3 main">
+                                        <img class="card-img-top" src="img/testimg.png"/>
+                                        <div class="card-body">"Like" button in comments</div>
+                                        <div class="card-footer"><i>*logos/indicators*</i></div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">QA</div>
+                                <div class="p-3 layout">
+                                    <div class="card p-2 mb-3 main">
+                                        <div class="card-body">Embed all the things</div>
+                                        <div class="card-footer"><i>*logos/indicators*</i></div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">Ready for launch</div>
+                                <div class="p-3 layout">
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="list main">
+                                <div class="mb-3 descriptor">Live</div>
+                                <div class="p-3 layout">
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section mb-4 main">
+                        <div class="descriptor">MEDIUM COMPLEXITY - 3C APPROACH</div>
+                        <div class="d-flex">
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">Concern raised</div>
+                                <div class="p-3 layout">
+                                    <div class="card p-2 mb-3 main">
+                                        <img class="card-img-top" src="img/testimg2.png"/>
+                                        <div class="card-body">Work on the same project</div>
+                                        <div class="card-footer"><i>*logos/indicators*</i></div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">Contain issue</div>
+                                <div class="p-3 layout">
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">Countermeasure</div>
+                                <div class="p-3 layout">
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+<!--            <div class="category pt-3 mr-5 main">-->
+<!--                <div class="descriptor">CATEGORY 3</div>-->
+<!--            </div>-->
+        </div>
+    </div>
+</div>
 </body>
 
 </html>
