@@ -7,5 +7,7 @@ module.exports = function() {
         useUnifiedTopology: true
     });
 
+    require("../app/models/category.server.model");
+
     return db;
 }
