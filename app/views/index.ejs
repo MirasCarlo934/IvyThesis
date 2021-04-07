@@ -25,12 +25,21 @@
 
     <!-- jQuery library -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
 
     <!-- Popper JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
 
     <!-- Latest compiled JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        $(function() {
+            $(".sortable").sortable({
+                connectWith: ".sortable"
+            }).disableSelection();
+        });
+    </script>
 </head>
 
 <body>
@@ -74,9 +83,12 @@
                     <div class="section mb-4 main">
                         <div class="descriptor">SMALLER WORK - <48 HR RESOLUTION</div>
                         <div class="d-flex">
+
+                            <!-- TESTING FOR DRAGGABLES -->
+
                             <div class="list mr-3 main">
                                 <div class="mb-3 descriptor">In Progress</div>
-                                <div class="p-3 layout">
+                                <div class="p-3 layout sortable">
                                     <div class="card p-2 mb-3 main">
                                         <div class="card-body">Localization</div>
                                         <div class="card-footer"><i>*logos/indicators*</i></div>
@@ -91,14 +103,18 @@
                             </div>
                             <div class="list mr-3 main">
                                 <div class="mb-3 descriptor">QA</div>
-                                <div class="p-3 layout">
+                                <div class="p-3 layout sortable">
                                     <div class="card p-2 mb-3 main">
                                         <div class="card-body">Embed all the things</div>
                                         <div class="card-footer"><i>*logos/indicators*</i></div>
                                     </div>
+                                    <div class="card-filler"></div>
                                     <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
                                 </div>
                             </div>
+
+                            <!-- END -->
+
                             <div class="list mr-3 main">
                                 <div class="mb-3 descriptor">Ready for launch</div>
                                 <div class="p-3 layout">
