@@ -11,6 +11,16 @@ exports.create = function(req, res, next) {
     });
 };
 
+exports.list = function(req, res, next) {
+    Category.find({}, function(err, categories) {
+        if (err) {
+            return next(err);
+        } else {
+            res.json(categories);
+        }
+    });
+};
+
 exports.read = function(req, res, next) {
     res.json(req.category);
 }
