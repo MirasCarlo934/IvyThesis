@@ -10,3 +10,20 @@ exports.create = function(req, res, next) {
         }
     });
 };
+
+exports.read = function(req, res, next) {
+    res.json(req.category);
+}
+
+exports.categoryByOrder = function(req, res, next, order) {
+    Category.findOne({
+        order: order
+    }, function(err, category) {
+        if (err) {
+            return next(err);
+        } else {
+            req.category = category;
+            next();
+        }
+    });
+};
