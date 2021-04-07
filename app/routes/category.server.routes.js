@@ -6,7 +6,8 @@ module.exports = function(app) {
         .get(categories.list);
 
     app.route("/categories/:categoryOrder")
-        .get(categories.read);
+        .get(categories.read)
+        .put(categories.update);
 
     app.param("categoryOrder", categories.categoryByOrder);
 }
