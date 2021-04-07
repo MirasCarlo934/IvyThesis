@@ -2,9 +2,12 @@ var mongoose = require("mongoose");
     Schema = mongoose.Schema;
 
 var CategorySchema = new Schema({
-    id: String,
     name: String,
-    description: String
+    description: String,
+    order: {
+        type: Number,
+        min: 0
+    }
 });
 
-mongoose.model("Category", "CategorySchema");
+mongoose.model("Category", CategorySchema);
