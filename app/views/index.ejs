@@ -16,6 +16,9 @@
         .card, .card-filler {
             width: 250px;
         }
+        .card-placeholder {
+            border: 5px solid red
+        }
     </style>
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -36,7 +39,9 @@
     <script>
         $(function() {
             $(".sortable").sortable({
-                connectWith: ".sortable"
+                connectWith: ".sortable",
+                placeholder: "card-placeholder mb-3",
+                forcePlaceholderSize: true
             }).disableSelection();
         });
     </script>
@@ -98,7 +103,9 @@
                                         <div class="card-body">"Like" button in comments</div>
                                         <div class="card-footer"><i>*logos/indicators*</i></div>
                                     </div>
-                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                    <div class="card-filler">
+                                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="list mr-3 main">
@@ -109,7 +116,9 @@
                                         <div class="card-footer"><i>*logos/indicators*</i></div>
                                     </div>
                                     <div class="card-filler"></div>
-                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                    <div class="card-filler">
+                                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                    </div>
                                 </div>
                             </div>
 
