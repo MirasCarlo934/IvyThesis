@@ -46,15 +46,36 @@ exports.read = function(req, res, next) {
 }
 
 exports.update = function(req, res, next) {
-    Category.updateOne({
-        order: req.category.order
-    }, req.body, function(err, category) {
+    if(req.category === null) {
+        let category = new Category(req.body);
+        category.save(function(err) {
+            if (err) {
+                return next(err);
+            } else {
+                res.json(category);
+            }
+        });
+    } else {
+        Category.findOneAndUpdate({
+            order: req.category.order
+        }, req.body, function (err, category) {
+            if (err) {
+                return next(err);
+            } else {
+                res.json(category);
+            }
+        });
+    }
+}
+
+exports.delete = function(req, res, next) {
+    req.category.remove(function(err) {
         if (err) {
             return next(err);
         } else {
-            res.json(category);
+            return res.json(req.category);
         }
-    });
+    })
 }
 
 // PATH PARAMETER FUNCTIONS
