@@ -10,6 +10,8 @@ module.exports = function() {
 
     require("../app/models/category.server.model");
     require("../app/models/section.server.model");
+    require("../app/models/list.server.model");
+    require("../app/models/card.server.model");
 
     return db;
 }
