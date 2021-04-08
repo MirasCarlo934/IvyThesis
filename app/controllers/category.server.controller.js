@@ -30,12 +30,14 @@ exports.create = function(req, res, next) {
 };
 
 exports.list = function(req, res, next) {
-    Category.find({}, function(err, categories) {
-        if (err) {
-            return next(err);
-        } else {
-            res.json(categories);
-        }
+    Category.find({})
+        .sort("order")
+        .exec(function(err, categories) {
+            if (err) {
+                return next(err);
+            } else {
+                res.json(categories);
+            }
     });
 };
 
