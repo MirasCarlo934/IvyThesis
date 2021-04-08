@@ -68,6 +68,16 @@ exports.update = function(req, res, next) {
     }
 }
 
+exports.delete = function(req, res, next) {
+    req.section.remove(function(err) {
+        if (err) {
+            return next(err);
+        } else {
+            return res.json(req.section);
+        }
+    })
+}
+
 // PATH PARAMETER FUNCTIONS
 
 exports.sectionByOrder = function(req, res, next, order) {

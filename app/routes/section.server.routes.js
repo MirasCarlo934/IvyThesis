@@ -7,7 +7,8 @@ module.exports = function(app) {
 
     app.route("/sections/:sectionOrder")
         .get(sections.read)
-        .put(sections.update);
+        .put(sections.update)
+        .delete(sections.delete);
 
     app.param("sectionOrder", sections.sectionByOrder);
 }
