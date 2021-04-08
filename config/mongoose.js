@@ -8,6 +8,7 @@ module.exports = function() {
     });
 
     require("../app/models/category.server.model");
+    require("../app/models/section.server.model");
 
     return db;
 }

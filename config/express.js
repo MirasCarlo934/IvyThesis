@@ -24,6 +24,7 @@ module.exports = function() {
 
     require("../app/routes/index.server.routes.js")(app);
     require("../app/routes/category.server.routes.js")(app);
+    require("../app/routes/section.server.routes.js")(app);
 
     app.use(express.static("./public"));
 
