@@ -4,7 +4,8 @@ var config = require("./config"),
 module.exports = function() {
     var db = mongoose.connect(config.mongodb.uri, {
         useNewUrlParser: true,
-        useUnifiedTopology: true
+        useUnifiedTopology: true,
+        useFindAndModify: false
     });
 
     require("../app/models/category.server.model");

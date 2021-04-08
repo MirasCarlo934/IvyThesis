@@ -46,15 +46,26 @@ exports.read = function(req, res, next) {
 }
 
 exports.update = function(req, res, next) {
-    Section.updateOne({
-        order: req.section.order
-    }, req.body, function(err, category) {
-        if (err) {
-            return next(err);
-        } else {
-            res.json(category);
-        }
-    });
+    if (req.section === null) {
+        let section = new Section(req.body);
+        section.save(function(err) {
+            if (err) {
+                return next(err);
+            } else {
+                res.json(section);
+            }
+        });
+    } else {
+        Section.findOneAndUpdate({
+            order: req.section.order
+        }, req.body, function (err, section) {
+            if (err) {
+                return next(err);
+            } else {
+                res.json(section);
+            }
+        });
+    }
 }
 
 // PATH PARAMETER FUNCTIONS
