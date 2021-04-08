@@ -43,7 +43,7 @@ exports.list = function(req, res, next) {
 
 exports.read = function(req, res, next) {
     res.json(req.category);
-}
+};
 
 exports.update = function(req, res, next) {
     if(req.category === null) {
@@ -66,7 +66,7 @@ exports.update = function(req, res, next) {
             }
         });
     }
-}
+};
 
 exports.delete = function(req, res, next) {
     req.category.remove(function(err) {
@@ -75,8 +75,8 @@ exports.delete = function(req, res, next) {
         } else {
             return res.json(req.category);
         }
-    })
-}
+    });
+};
 
 // PATH PARAMETER FUNCTIONS
 
