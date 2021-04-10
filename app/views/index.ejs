@@ -47,15 +47,28 @@
         let context = [];
 
         function buildCategory(categoryList) {
-            for (int i = 0; i < categoryList.length; i++) {
+            for (let i = 0; i < categoryList.length; i++) {
                 let category = categoryList[i];
-
+                category.children = [];
+                $.get(host + sectionsPath + "?categoryId=" + category._id, function(data) {
+                    for (let j = 0; j < data.length; j++) {
+                        category.children.push(data[j]);
+                    }
+                });
+                $.get(host + listsPath + "?categoryId=" + category._id, function(data) {
+                    for (let j = 0; j < data.length; j++) {
+                        category.children.push(data[j]);
+                    }
+                });
             }
         }
 
         $(function() {
             $.get(host + categoriesPath, function(data) {
-                context = data;
+                $.get(host + listsPath, )
+                for (let i = 0; i < data.length; i++) {
+                    context.push(data);
+                }
                 buildCategory(context);
             });
             $(".sortable").sortable({

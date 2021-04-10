@@ -31,11 +31,16 @@ exports.create = function(req, res, next) {
 
 exports.list = function(req, res, next) {
     let query = {};
-    if (req.query.sectionId) {
-        query.sectionId = req.query.sectionId;
-    }
-    if (req.query.categoryId) {
-        query.categoryId = req.query.categoryId;
+    if (req.query.ungrouped === "true") {
+        query.sectionId = null;
+        query.categoryId = null;
+    } else {
+        if (req.query.sectionId) {
+            query.sectionId = req.query.sectionId;
+        }
+        if (req.query.categoryId) {
+            query.categoryId = req.query.categoryId;
+        }
     }
     List.find(query)
         .sort("order")
