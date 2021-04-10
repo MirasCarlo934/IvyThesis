@@ -30,7 +30,11 @@ exports.create = function(req, res, next) {
 };
 
 exports.list = function(req, res, next) {
-    Card.find({})
+    let query = {};
+    if (req.query.listId) {
+        query.listId = req.query.listId;
+    }
+    Card.find(query)
         .sort("order")
         .exec(function(err, cards) {
             if (err) {
