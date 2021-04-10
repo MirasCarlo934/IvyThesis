@@ -11,11 +11,11 @@ exports.create = function(req, res, next) {
         if (err) {
             return next(err);
         } else {
-            if (exists) {
-                res.status(400).json({
-                    errmsg: "A category already exists at specified order"
-                });
-            } else {
+            // if (exists) {
+            //     res.status(400).json({
+            //         errmsg: "A category already exists at specified order"
+            //     });
+            // } else {
                 category.save(function(err) {
                     if (err) {
                         return next(err);
@@ -24,7 +24,7 @@ exports.create = function(req, res, next) {
                     }
                 });
             }
-        }
+        // }
 
     });
 };

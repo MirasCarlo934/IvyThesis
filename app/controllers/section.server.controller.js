@@ -11,11 +11,11 @@ exports.create = function(req, res, next) {
         if (err) {
             return next(err);
         } else {
-            if (exists) {
-                res.status(400).json({
-                    errmsg: "A section already exists at specified order"
-                });
-            } else {
+            // if (exists) {
+            //     res.status(400).json({
+            //         errmsg: "A section already exists at specified order"
+            //     });
+            // } else {
                 category.save(function(err) {
                     if (err) {
                         return next(err);
@@ -23,14 +23,16 @@ exports.create = function(req, res, next) {
                         res.json(category);
                     }
                 });
-            }
+            // }
         }
 
     });
 };
 
 exports.list = function(req, res, next) {
-    Section.find({})
+    Section.find({
+        categoryId: req.query.categoryId
+    })
         .sort("order")
         .exec(function(err, sections) {
             if (err) {
