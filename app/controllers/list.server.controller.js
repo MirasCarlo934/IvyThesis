@@ -30,7 +30,14 @@ exports.create = function(req, res, next) {
 };
 
 exports.list = function(req, res, next) {
-    List.find({})
+    let query = {};
+    if (req.query.sectionId) {
+        query.sectionId = req.query.sectionId;
+    }
+    if (req.query.categoryId) {
+        query.categoryId = req.query.categoryId;
+    }
+    List.find(query)
         .sort("order")
         .exec(function(err, lists) {
             if (err) {

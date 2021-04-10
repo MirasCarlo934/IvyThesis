@@ -30,9 +30,11 @@ exports.create = function(req, res, next) {
 };
 
 exports.list = function(req, res, next) {
-    Section.find({
-        categoryId: req.query.categoryId
-    })
+    let query = {};
+    if (req.query.categoryId) {
+        query.categoryId = req.query.categoryId
+    }
+    Section.find(query)
         .sort("order")
         .exec(function(err, sections) {
             if (err) {
