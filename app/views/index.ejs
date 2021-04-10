@@ -46,30 +46,55 @@
 
         let context = [];
 
-        function buildCategory(categoryList) {
-            for (let i = 0; i < categoryList.length; i++) {
-                let category = categoryList[i];
-                category.children = [];
-                $.get(host + sectionsPath + "?categoryId=" + category._id, function(data) {
-                    for (let j = 0; j < data.length; j++) {
-                        category.children.push(data[j]);
-                    }
-                });
-                $.get(host + listsPath + "?categoryId=" + category._id, function(data) {
-                    for (let j = 0; j < data.length; j++) {
-                        category.children.push(data[j]);
-                    }
-                });
-            }
+        function buildCategory(category) {
+            category.children = [];
+            // get children sections
+            $.get(host + sectionsPath + "?categoryId=" + category._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    category.children.push(buildSection(data[i]));
+                }
+            });
+            // get children lists
+            $.get(host + listsPath + "?categoryId=" + category._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    category.children.push(buildList(data[i]));
+                }
+            });
+            return category;
+        }
+
+        function buildSection(section) {
+            section.children = [];
+            // get children lists
+            $.get(host + listsPath + "?sectionId=" + section._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    section.children.push(buildList(data[i]));
+                }
+            });
+            return section;
+        }
+
+        function buildList(list) {
+            list.children = [];
+            // get children cards
+            $.get(host + cardsPath + "?listId=" + list._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    list.children.push(data[i]);
+                }
+            });
+            return list;
         }
 
         $(function() {
-            $.get(host + categoriesPath, function(data) {
-                $.get(host + listsPath, )
-                for (let i = 0; i < data.length; i++) {
-                    context.push(data);
-                }
-                buildCategory(context);
+            $.get(host + categoriesPath, function(data1) {
+                $.get(host + listsPath + "?ungrouped=true", function(data2) {
+                    for (let i = 0; i < data1.length; i++) {
+                        context.push(buildCategory(data1[i]));
+                    }
+                    for (let i = 0; i < data2.length; i++) {
+                        context.push(buildList(data2[i]));
+                    }
+                });
             });
             $(".sortable").sortable({
                 items: "div:not(.ui-state-disabled)",
