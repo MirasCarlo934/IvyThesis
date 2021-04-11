@@ -10,7 +10,7 @@
         div.layout {
             border: 1px solid black;
         }
-        div.descriptor {
+        div.descriptor, div.name {
             border: 1px solid red;
         }
         .card, .card-filler {
@@ -45,63 +45,129 @@
         let cardsPath = "<%=api.cardsPath%>";
 
         let context = [];
+        let totalResources = 0;
+        let builtResources = 0;
+
+        let sortFunc = function(a,b) {
+            if (a.order < b.order) return -1;
+            else if (a.order > b.order) return 1;
+            else return 0;
+        }
+
+        function buildDOM() {
+            builtResources++;
+            if (builtResources === totalResources) {
+                context.sort(sortFunc);
+                $("#board .content").html("");
+                for (let i = 0; i < context.length; i++) {
+
+                    let resource = context[i];
+                    if (resource.resourceType === "category") {
+                        $dom = $("<div></div>");
+                        $name = $("<div></div>");
+                        $content = $("<div></div>");
+
+                        $dom.attr({
+                            "id": resource.categoryId,
+                            "class": "category mr-5 main"
+                        });
+                        $name.attr({
+                            "id": resource.categoryId + "-" + "name",
+                            "class": "mb-4 name"
+                        });
+                        $content.attr({
+                            "id": resource.categoryId + "-" + "content",
+                            "class": "d-flex flex-column"
+                        });
+                        $name.html(resource.name);
+                        $dom.append($name);
+                        $dom.append($content);
+                        $("#board .content").append($dom);
+                    }
+
+                }
+            }
+        }
 
         function buildCategory(category) {
+            let builtChildren = 0;
+            totalResources++;
             category.children = [];
             // get children sections
             $.get(host + sectionsPath + "?categoryId=" + category._id, function(data) {
                 for (let i = 0; i < data.length; i++) {
+                    data[i].resourceType = "section";
                     category.children.push(buildSection(data[i]));
                 }
+                if (builtChildren) buildDOM();
+                else builtChildren++;
             });
             // get children lists
             $.get(host + listsPath + "?categoryId=" + category._id, function(data) {
                 for (let i = 0; i < data.length; i++) {
+                    data[i].resourceType = "list";
                     category.children.push(buildList(data[i]));
                 }
+                if (builtChildren) buildDOM();
+                else builtChildren++;
             });
             return category;
         }
 
         function buildSection(section) {
+            totalResources++;
             section.children = [];
             // get children lists
             $.get(host + listsPath + "?sectionId=" + section._id, function(data) {
                 for (let i = 0; i < data.length; i++) {
+                    data[i].resourceType = "section";
                     section.children.push(buildList(data[i]));
                 }
+                buildDOM();
             });
             return section;
         }
 
         function buildList(list) {
+            totalResources++;
             list.children = [];
             // get children cards
             $.get(host + cardsPath + "?listId=" + list._id, function(data) {
                 for (let i = 0; i < data.length; i++) {
+                    data[i].resourceType = "card";
                     list.children.push(data[i]);
                 }
+                buildDOM();
             });
             return list;
         }
 
         $(function() {
+
+            // build context
             $.get(host + categoriesPath, function(data1) {
                 $.get(host + listsPath + "?ungrouped=true", function(data2) {
                     for (let i = 0; i < data1.length; i++) {
+                        data1[i].resourceType = "category";
                         context.push(buildCategory(data1[i]));
                     }
                     for (let i = 0; i < data2.length; i++) {
+                        data2[i].resourceType = "list";
                         context.push(buildList(data2[i]));
                     }
                 });
             });
+
+            // build DOM
+            // $("#board .content").html("<div>test</div>");
+
             $(".sortable").sortable({
                 items: "div:not(.ui-state-disabled)",
                 connectWith: ".sortable",
                 placeholder: "card-placeholder mb-3",
                 forcePlaceholderSize: true
             }).disableSelection();
+
         });
     </script>
 </head>
@@ -112,9 +178,9 @@
     <h1>
         <%= title %>
     </h1>
-    <div class="layout-board layout">
+    <div id="board" class="layout-board layout">
         <div class="descriptor">I am a board</div><br/>
-        <div class="d-flex p-2 layout">
+        <div class="d-flex p-2 layout content">
             <div class="category mr-5 main">
                 <div class="mb-4 descriptor">PENDING</div>
                 <div class="list main">
