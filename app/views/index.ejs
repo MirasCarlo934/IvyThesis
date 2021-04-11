@@ -60,52 +60,73 @@
                 let $board_content = $("#board .content");
                 context.sort(sortFunc);
                 $board_content.html("");
-                buildBoardDOM(context, $board_content);
+                for (let i = 0; i < context.length; i++) {
+                    buildBoardContentDOM(context[i], $board_content);
+                }
             }
         }
 
-        function buildBoardDOM(content_list, $container) {
+        function buildBoardContentDOM(resource, $container) {
+            let $dom = $("<div></div>");
+            let $name = $("<div></div>");
+            let $content = $("<div></div>");
+            if (resource.resourceType === "category") {
+                $dom.attr({
+                    "id": resource.categoryId,
+                    "class": "category mr-5 main"
+                });
+                $name.attr({
+                    "id": resource.categoryId + "-" + "name",
+                    "class": "mb-4 name"
+                });
+                $content.attr({
+                    "id": resource.categoryId + "-" + "content",
+                    "class": "d-flex flex-column"
+                });
+                buildListDOM(resource.children, $content);
+            } else if (resource.resourceType === "list") {
+                $dom.attr({
+                    "id": resource.listId,
+                    "class": "list mr-5 main"
+                });
+                $name.attr({
+                    "id": resource.listId + "-" + "name",
+                    "class": "mb-3 descriptor"
+                });
+                $content.attr({
+                    "id": resource.listId + "-" + "content",
+                    "class": "p-3 layout sortable"
+                });
+            }
+            $name.html(resource.name);
+            $dom.append($name);
+            $dom.append($content);
+            $container.append($dom);
+        }
+
+        function buildListDOM(content_list, $container) {
             for (let i = 0; i < content_list.length; i++) {
                 let resource = content_list[i];
                 let $dom = $("<div></div>");
                 let $name = $("<div></div>");
                 let $content = $("<div></div>");
-                if (resource.resourceType === "category") {
-                    $dom.attr({
-                        "id": resource.categoryId,
-                        "class": "category mr-5 main"
-                    });
-                    $name.attr({
-                        "id": resource.categoryId + "-" + "name",
-                        "class": "mb-4 name"
-                    });
-                    $content.attr({
-                        "id": resource.categoryId + "-" + "content",
-                        "class": "d-flex flex-column"
-                    });
-                } else if (resource.resourceType === "list") {
-                    $dom.attr({
-                        "id": resource.listId,
-                        "class": "list mr-5 main"
-                    });
-                    $name.attr({
-                        "id": resource.listId + "-" + "name",
-                        "class": "mb-3 descriptor"
-                    });
-                    $content.attr({
-                        "id": resource.listId + "-" + "content",
-                        "class": "p-3 layout sortable"
-                    });
-                }
+                $dom.attr({
+                    "id": resource.listId,
+                    "class": "list mr-3 main"
+                });
+                $name.attr({
+                    "id": resource.listId + "-" + "name",
+                    "class": "mb-3 name"
+                });
+                $content.attr({
+                    "id": resource.listId + "-" + "content",
+                    "class": "p-3 layout sortable"
+                });
                 $name.html(resource.name);
                 $dom.append($name);
                 $dom.append($content);
                 $container.append($dom);
             }
-        }
-
-        function buildListDOM($container) {
-
         }
 
         function buildCategory(category) {
