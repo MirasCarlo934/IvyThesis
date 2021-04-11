@@ -110,45 +110,6 @@
             $container.append($dom);
         }
 
-        function buildCategory(category) {
-            let builtChildren = 0;
-            totalResources++;
-            category.children = [];
-            // get children sections
-            $.get(host + sectionsPath + "?categoryId=" + category._id, function(data) {
-                for (let i = 0; i < data.length; i++) {
-                    data[i].resourceType = "section";
-                    category.children.push(buildSection(data[i]));
-                }
-                if (builtChildren) buildDOM();
-                else builtChildren++;
-            });
-            // get children lists
-            $.get(host + listsPath + "?categoryId=" + category._id, function(data) {
-                for (let i = 0; i < data.length; i++) {
-                    data[i].resourceType = "list";
-                    category.children.push(buildList(data[i]));
-                }
-                if (builtChildren) buildDOM();
-                else builtChildren++;
-            });
-            return category;
-        }
-
-        function buildSection(section) {
-            totalResources++;
-            section.children = [];
-            // get children lists
-            $.get(host + listsPath + "?sectionId=" + section._id, function(data) {
-                for (let i = 0; i < data.length; i++) {
-                    data[i].resourceType = "section";
-                    section.children.push(buildList(data[i]));
-                }
-                buildDOM();
-            });
-            return section;
-        }
-
         function buildList(list) {
             totalResources++;
             list.children = [];
