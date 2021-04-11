@@ -62,11 +62,10 @@
                 for (let i = 0; i < context.length; i++) {
 
                     let resource = context[i];
+                    let $dom = $("<div></div>");
+                    let $name = $("<div></div>");
+                    let $content = $("<div></div>");
                     if (resource.resourceType === "category") {
-                        $dom = $("<div></div>");
-                        $name = $("<div></div>");
-                        $content = $("<div></div>");
-
                         $dom.attr({
                             "id": resource.categoryId,
                             "class": "category mr-5 main"
@@ -79,11 +78,24 @@
                             "id": resource.categoryId + "-" + "content",
                             "class": "d-flex flex-column"
                         });
-                        $name.html(resource.name);
-                        $dom.append($name);
-                        $dom.append($content);
-                        $("#board .content").append($dom);
+                    } else if (resource.resourceType === "list") {
+                        $dom.attr({
+                            "id": resource.listId,
+                            "class": "list mr-5 main"
+                        });
+                        $name.attr({
+                            "id": resource.listId + "-" + "name",
+                            "class": "mb-3 descriptor"
+                        });
+                        $content.attr({
+                            "id": resource.listId + "-" + "content",
+                            "class": "p-3 layout sortable"
+                        });
                     }
+                    $name.html(resource.name);
+                    $dom.append($name);
+                    $dom.append($content);
+                    $("#board .content").append($dom);
 
                 }
             }
