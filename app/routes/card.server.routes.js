@@ -5,10 +5,11 @@ module.exports = function(app) {
         .post(cards.create)
         .get(cards.list);
 
-    app.route("/cards/:cardOrder")
+    app.route("/cards/:cardId")
         .get(cards.read)
         .put(cards.update)
         .delete(cards.delete);
 
     app.param("cardOrder", cards.cardByOrder);
+    app.param("cardId", cards.cardById);
 }

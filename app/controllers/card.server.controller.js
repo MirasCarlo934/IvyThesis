@@ -96,3 +96,14 @@ exports.cardByOrder = function(req, res, next, order) {
         }
     });
 };
+
+exports.cardById = function(req, res, next, id) {
+    Card.findById(id, function(err, card) {
+        if (err) {
+            return next(err);
+        } else {
+            req.card = card;
+            next();
+        }
+    });
+}
