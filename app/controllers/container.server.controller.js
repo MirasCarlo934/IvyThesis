@@ -91,17 +91,4 @@ exports.containerById = function(req, res, next, id) {
             next();
         }
     });
-}
-
-exports.containerByOrder = function(req, res, next, order) {
-    Container.findOne({
-        order: order
-    }, function(err, container) {
-        if (err) {
-            return next(err);
-        } else {
-            req.container = container;
-            next();
-        }
-    });
 };
