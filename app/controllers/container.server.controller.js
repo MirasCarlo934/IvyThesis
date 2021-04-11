@@ -60,9 +60,7 @@ exports.update = function(req, res, next) {
             }
         });
     } else {
-        Container.findOneAndUpdate({
-            order: req.container.order
-        }, req.body, function (err, container) {
+        Container.findByIdAndUpdate(req.container.id, req.body, function (err, container) {
             if (err) {
                 return next(err);
             } else {
@@ -83,6 +81,17 @@ exports.delete = function(req, res, next) {
 };
 
 // PATH PARAMETER FUNCTIONS
+
+exports.containerById = function(req, res, next, id) {
+    Container.findById(id, function(err, container) {
+        if (err) {
+            return next(err);
+        } else {
+            req.container = container;
+            next();
+        }
+    });
+}
 
 exports.containerByOrder = function(req, res, next, order) {
     Container.findOne({

@@ -5,10 +5,10 @@ module.exports = function(app) {
         .post(containers.create)
         .get(containers.list);
 
-    app.route("/containers/:containerOrder")
+    app.route("/containers/:containerId")
         .get(containers.read)
         .put(containers.update)
         .delete(containers.delete);
 
-    app.param("containerOrder", containers.containerByOrder);
+    app.param("containerId", containers.containerById);
 }
