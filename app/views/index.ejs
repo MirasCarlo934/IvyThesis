@@ -62,32 +62,37 @@
                 context.sort(sortFunc);
                 $board_content.html("");
                 for (let i = 0; i < context.length; i++) {
-                    buildBoardContentDOM(context[i], $board_content);
+                    buildContainerDOM(context[i], $board_content);
                 }
             }
         }
 
-        function buildBoardContentDOM(resource, $container) {
+        function buildContainerDOM(resource, $container) {
             let $dom = $("<div></div>");
             let $name = $("<div></div>");
             let $content = $("<div></div>");
-            if (resource.resourceType === "category") {
+            if (resource.resourceType === "container") {
+                let container = resource;
                 $dom.attr({
-                    "id": resource.categoryId,
+                    "id": container.categoryId,
                     "class": "category mr-5 main"
                 });
                 $name.attr({
-                    "id": resource.categoryId + "-" + "name",
+                    "id": container.categoryId + "-" + "name",
                     "class": "mb-4 name"
                 });
                 $content.attr({
-                    "id": resource.categoryId + "-" + "content",
-                    "class": "d-flex flex-column"
+                    "id": container.categoryId + "-" + "content"
                 });
-                for (let i = 0; i < resource.children.length; i++) {
-                    let res = resource.children[i];
-                    if (res.resourceType === "list") {
-                        buildListDOM(res, $content);
+                if (container.orientation === "x") {
+                    $content.attr("class", "d-flex");
+                } else {
+                    $content.attr("class", "d-flex flex-column");
+                }
+                for (let i = 0; i < container.children.length; i++) {
+                    let res = container.children[i];
+                    if (res.resourceType === "container") {
+                        buildContainerDOM(res, $content);
                     }
                 }
             } else if (resource.resourceType === "list") {
