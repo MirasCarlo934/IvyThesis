@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title/><%= title %></title>
+    <style>
+        div.main {
+            border: 3px solid black;
+        }
+        div.layout {
+            border: 1px solid black;
+        }
+        div.descriptor, div.name {
+            border: 1px solid red;
+        }
+        .card, .card-filler {
+            width: 250px;
+        }
+        .card-placeholder {
+            border: 5px solid red
+        }
+    </style>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU=" crossorigin="anonymous"></script>
+    <script src="js/jquery.ui.sortable-animation.js"/>
+
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        let host = "<%=api.host%>";
+        let categoriesPath = "<%=api.categoriesPath%>";
+        let sectionsPath = "<%=api.sectionsPath%>";
+        let listsPath = "<%=api.listsPath%>";
+        let cardsPath = "<%=api.cardsPath%>";
+
+        let context = [];
+        let totalResources = 0;
+        let builtResources = 0;
+
+        let sortFunc = function(a,b) {
+            if (a.order < b.order) return -1;
+            else if (a.order > b.order) return 1;
+            else return 0;
+        }
+
+        function buildDOM() {
+            builtResources++;
+            if (builtResources === totalResources) {
+                let $board_content = $("#board .content");
+                context.sort(sortFunc);
+                $board_content.html("");
+                for (let i = 0; i < context.length; i++) {
+                    buildBoardContentDOM(context[i], $board_content);
+                }
+            }
+        }
+
+        function buildBoardContentDOM(resource, $container) {
+            let $dom = $("<div></div>");
+            let $name = $("<div></div>");
+            let $content = $("<div></div>");
+            if (resource.resourceType === "category") {
+                $dom.attr({
+                    "id": resource.categoryId,
+                    "class": "category mr-5 main"
+                });
+                $name.attr({
+                    "id": resource.categoryId + "-" + "name",
+                    "class": "mb-4 name"
+                });
+                $content.attr({
+                    "id": resource.categoryId + "-" + "content",
+                    "class": "d-flex flex-column"
+                });
+                for (let i = 0; i < resource.children.length; i++) {
+                    let res = resource.children[i];
+                    if (res.resourceType === "list") {
+                        buildListDOM(res, $content);
+                    }
+                }
+            } else if (resource.resourceType === "list") {
+                $dom.attr({
+                    "id": resource.listId,
+                    "class": "list mr-5 main"
+                });
+                $name.attr({
+                    "id": resource.listId + "-" + "name",
+                    "class": "mb-3 descriptor"
+                });
+                $content.attr({
+                    "id": resource.listId + "-" + "content",
+                    "class": "p-3 layout sortable"
+                });
+            }
+            $name.html(resource.name);
+            $dom.append($name);
+            $dom.append($content);
+            $container.append($dom);
+        }
+
+        function buildListDOM(resource, $container) {
+            let $dom = $("<div></div>");
+            let $name = $("<div></div>");
+            let $content = $("<div></div>");
+            $dom.attr({
+                "id": resource.listId,
+                "class": "list mr-3 main"
+            });
+            $name.attr({
+                "id": resource.listId + "-" + "name",
+                "class": "mb-3 name"
+            });
+            $content.attr({
+                "id": resource.listId + "-" + "content",
+                "class": "p-3 layout sortable"
+            });
+            $name.html(resource.name);
+            $dom.append($name);
+            $dom.append($content);
+            $container.append($dom);
+        }
+
+        function buildCategory(category) {
+            let builtChildren = 0;
+            totalResources++;
+            category.children = [];
+            // get children sections
+            $.get(host + sectionsPath + "?categoryId=" + category._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    data[i].resourceType = "section";
+                    category.children.push(buildSection(data[i]));
+                }
+                if (builtChildren) buildDOM();
+                else builtChildren++;
+            });
+            // get children lists
+            $.get(host + listsPath + "?categoryId=" + category._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    data[i].resourceType = "list";
+                    category.children.push(buildList(data[i]));
+                }
+                if (builtChildren) buildDOM();
+                else builtChildren++;
+            });
+            return category;
+        }
+
+        function buildSection(section) {
+            totalResources++;
+            section.children = [];
+            // get children lists
+            $.get(host + listsPath + "?sectionId=" + section._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    data[i].resourceType = "section";
+                    section.children.push(buildList(data[i]));
+                }
+                buildDOM();
+            });
+            return section;
+        }
+
+        function buildList(list) {
+            totalResources++;
+            list.children = [];
+            // get children cards
+            $.get(host + cardsPath + "?listId=" + list._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    data[i].resourceType = "card";
+                    list.children.push(data[i]);
+                }
+                buildDOM();
+            });
+            return list;
+        }
+
+        $(function() {
+
+            // build context
+            $.get(host + categoriesPath, function(data1) {
+                $.get(host + listsPath + "?ungrouped=true", function(data2) {
+                    for (let i = 0; i < data1.length; i++) {
+                        data1[i].resourceType = "category";
+                        context.push(buildCategory(data1[i]));
+                    }
+                    for (let i = 0; i < data2.length; i++) {
+                        data2[i].resourceType = "list";
+                        context.push(buildList(data2[i]));
+                    }
+                });
+            });
+
+            // build DOM
+            // $("#board .content").html("<div>test</div>");
+
+            $(".sortable").sortable({
+                items: "div:not(.ui-state-disabled)",
+                connectWith: ".sortable",
+                placeholder: "card-placeholder mb-3",
+                forcePlaceholderSize: true
+            }).disableSelection();
+
+        });
+    </script>
+</head>
+
+<body>
+<!--    <img src="img/testimg.png" alt="Test"/>-->
+<div class="layout-body container-fluid">
+    <h1>
+        <%= title %>
+    </h1>
+    <div id="board" class="layout-board layout">
+        <div class="descriptor">I am a board</div><br/>
+        <div class="d-flex p-2 layout content">
+            <div class="category mr-5 main">
+                <div class="mb-4 descriptor">PENDING</div>
+                <div class="list main">
+                    <div class="mb-3 descriptor">Incoming bugs</div>
+                    <div class="p-3 layout">
+                        <div class="card p-2 mb-3 main">
+                            <div class="card-body">Lightbox loading issue on Safari</div>
+                            <div class="card-footer"><i>*logos/indicators*</i></div>
+                        </div>
+                        <div class="card p-2 mb-3 main">
+                            <div class="card-body">Notifications Not Sending #4</div>
+                            <div class="card-footer"><i>*logos/indicators*</i></div>
+                        </div>
+                        <div class="card p-2 mb-3 main">
+                            <div class="card-body">Tab to comment goes to wrong field</div>
+                            <div class="card-footer"><i>*logos/indicators*</i></div>
+                        </div>
+                        <div class="card p-2 mb-3 main">
+                            <div class="card-body">Video load issues on IE 11</div>
+                            <div class="card-footer"><i>*logos/indicators*</i></div>
+                        </div>
+                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category mr-5 main">
+                <div class="mb-4 descriptor">STARTED</div>
+                <div class="d-flex flex-column">
+                    <div class="section mb-4 main">
+                        <div class="descriptor">SMALLER WORK - <48 HR RESOLUTION</div>
+                        <div class="d-flex">
+
+                            <!-- TESTING FOR DRAGGABLES -->
+
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">In Progress</div>
+                                <div class="p-3 layout sortable">
+                                    <div class="card p-2 mb-3 main">
+                                        <div class="card-body ui-state-disabled">Localization</div>
+                                        <div class="card-footer ui-state-disabled"><i>*logos/indicators*</i></div>
+                                    </div>
+                                    <div class="card p-2 mb-3 main">
+                                        <img class="card-img-top ui-state-disabled" src="img/testimg.png"/>
+                                        <div class="card-body ui-state-disabled">"Like" button in comments</div>
+                                        <div class="card-footer ui-state-disabled"><i>*logos/indicators*</i></div>
+                                    </div>
+                                    <div class="card-filler ui-state-disabled">
+                                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">QA</div>
+                                <div class="p-3 layout sortable">
+                                    <div class="card p-2 mb-3 main">
+                                        <div class="card-body ui-state-disabled">Embed all the things</div>
+                                        <div class="card-footer ui-state-disabled"><i>*logos/indicators*</i></div>
+                                    </div>
+                                    <div class="card-filler"></div>
+                                    <div class="card-filler ui-state-disabled">
+                                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- END -->
+
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">Ready for launch</div>
+                                <div class="p-3 layout">
+                                    <div class="card-filler"></div>
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="list main">
+                                <div class="mb-3 descriptor">Live</div>
+                                <div class="p-3 layout">
+                                    <div class="card-filler"></div>
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="section mb-4 main">
+                        <div class="descriptor">MEDIUM COMPLEXITY - 3C APPROACH</div>
+                        <div class="d-flex">
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">Concern raised</div>
+                                <div class="p-3 layout">
+                                    <div class="card p-2 mb-3 main">
+                                        <img class="card-img-top" src="img/testimg2.png"/>
+                                        <div class="card-body">Work on the same project</div>
+                                        <div class="card-footer"><i>*logos/indicators*</i></div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">Contain issue</div>
+                                <div class="p-3 layout">
+                                    <div class="card-filler"></div>
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <div class="list mr-3 main">
+                                <div class="mb-3 descriptor">Countermeasure</div>
+                                <div class="p-3 layout">
+                                    <div class="card-filler"></div>
+                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+<!--            <div class="category pt-3 mr-5 main">-->
+<!--                <div class="descriptor">CATEGORY 3</div>-->
+<!--            </div>-->
+        </div>
+    </div>
+</div>
+</body>
+
+</html>
