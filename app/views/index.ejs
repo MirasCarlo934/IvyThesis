@@ -43,6 +43,7 @@
         let sectionsPath = "<%=api.sectionsPath%>";
         let listsPath = "<%=api.listsPath%>";
         let cardsPath = "<%=api.cardsPath%>";
+        let containersPath = "<%-api.containersPath%>";
 
         let context = [];
         let totalResources = 0;
@@ -184,21 +185,41 @@
             return list;
         }
 
+        function buildContainer(container) {
+            container.children = []
+            $.get(host + containersPath + "?parentId=" + container._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    let child = data[i];
+                    buildContainer(child);
+                    container.children.push(child);
+                }
+            });
+        }
+
         $(function() {
 
             // build context
-            $.get(host + categoriesPath, function(data1) {
-                $.get(host + listsPath + "?ungrouped=true", function(data2) {
-                    for (let i = 0; i < data1.length; i++) {
-                        data1[i].resourceType = "category";
-                        context.push(buildCategory(data1[i]));
-                    }
-                    for (let i = 0; i < data2.length; i++) {
-                        data2[i].resourceType = "list";
-                        context.push(buildList(data2[i]));
-                    }
-                });
+            $.get(host + containersPath + "?parentId=board", function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    let container = data[i];
+                    buildContainer(container);
+                    context.push(container);
+                }
             });
+
+            // build context (OLD)
+            // $.get(host + categoriesPath, function(data1) {
+            //     $.get(host + listsPath + "?ungrouped=true", function(data2) {
+            //         for (let i = 0; i < data1.length; i++) {
+            //             data1[i].resourceType = "category";
+            //             context.push(buildCategory(data1[i]));
+            //         }
+            //         for (let i = 0; i < data2.length; i++) {
+            //             data2[i].resourceType = "list";
+            //             context.push(buildList(data2[i]));
+            //         }
+            //     });
+            // });
 
             // build DOM
             // $("#board .content").html("<div>test</div>");

@@ -8,6 +8,7 @@ module.exports = {
         categoriesPath: "/categories",
         sectionsPath: "/sections",
         listsPath: "/lists",
-        cardsPath: "/cards"
+        cardsPath: "/cards",
+        containersPath: "/containers"
     }
 }
