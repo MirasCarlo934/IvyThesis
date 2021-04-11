@@ -110,28 +110,6 @@
             $container.append($dom);
         }
 
-        function buildListDOM(resource, $container) {
-            let $dom = $("<div></div>");
-            let $name = $("<div></div>");
-            let $content = $("<div></div>");
-            $dom.attr({
-                "id": resource.listId,
-                "class": "list mr-3 main"
-            });
-            $name.attr({
-                "id": resource.listId + "-" + "name",
-                "class": "mb-3 name"
-            });
-            $content.attr({
-                "id": resource.listId + "-" + "content",
-                "class": "p-3 layout sortable"
-            });
-            $name.html(resource.name);
-            $dom.append($name);
-            $dom.append($content);
-            $container.append($dom);
-        }
-
         function buildCategory(category) {
             let builtChildren = 0;
             totalResources++;
@@ -186,7 +164,10 @@
         }
 
         function buildContainer(container) {
-            container.children = []
+            let builtChildren = 0;
+            totalResources++;
+            container.children = [];
+            // get child containers
             $.get(host + containersPath + "?parentId=" + container._id, function(data) {
                 for (let i = 0; i < data.length; i++) {
                     let child = data[i];
@@ -194,8 +175,10 @@
                     buildContainer(child);
                     container.children.push(child);
                 }
+                if (builtChildren) buildDOM();
+                else builtChildren++;
             });
-
+            // get child lists
             $.get(host + listsPath + "?parentId=" + container._id, function(data) {
                 for (let i = 0; i < data.length; i++) {
                     let child = data[i];
@@ -203,6 +186,8 @@
                     buildList(child);
                     container.children.push(child);
                 }
+                if (builtChildren) buildDOM();
+                else builtChildren++;
             });
         }
 
@@ -217,6 +202,14 @@
                     context.push(container);
                 }
             });
+            $.get(host + listsPath + "?parentId=board", function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    let list = data[i];
+                    list.resourceType = "list";
+                    buildList(list);
+                    context.push(list);
+                }
+            })
 
             // build context (OLD)
             // $.get(host + categoriesPath, function(data1) {
