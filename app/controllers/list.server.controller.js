@@ -34,12 +34,16 @@ exports.list = function(req, res, next) {
     if (req.query.ungrouped === "true") {
         query.sectionId = null;
         query.categoryId = null;
+        query.parentId = null;
     } else {
         if (req.query.sectionId) {
             query.sectionId = req.query.sectionId;
         }
         if (req.query.categoryId) {
             query.categoryId = req.query.categoryId;
+        }
+        if (req.query.parentId) {
+            query.parentId = req.query.parentId;
         }
     }
     List.find(query)

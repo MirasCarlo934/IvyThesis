@@ -190,7 +190,17 @@
             $.get(host + containersPath + "?parentId=" + container._id, function(data) {
                 for (let i = 0; i < data.length; i++) {
                     let child = data[i];
+                    child.resourceType = "container";
                     buildContainer(child);
+                    container.children.push(child);
+                }
+            });
+
+            $.get(host + listsPath + "?parentId=" + container._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    let child = data[i];
+                    child.resourceType = "list";
+                    buildList(child);
                     container.children.push(child);
                 }
             });
@@ -202,6 +212,7 @@
             $.get(host + containersPath + "?parentId=board", function(data) {
                 for (let i = 0; i < data.length; i++) {
                     let container = data[i];
+                    container.resourceType = "container";
                     buildContainer(container);
                     context.push(container);
                 }

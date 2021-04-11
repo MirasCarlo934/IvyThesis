@@ -9,7 +9,8 @@ var ListSchema = new Schema({
         min: 0
     },
     sectionId: String,
-    categoryId: String
+    categoryId: String,
+    parentId: String
 });
 
 mongoose.model("List", ListSchema);
