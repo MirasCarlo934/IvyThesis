@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title/><%= title %></title>
+    <title/>IvyThesis</title>
     <style>
         div.main {
             border: 3px solid black;
@@ -59,66 +59,95 @@
             builtResources++;
             if (builtResources === totalResources) {
                 let $board_content = $("#board .content");
+                let $last;
                 context.sort(sortFunc);
                 $board_content.html("");
                 for (let i = 0; i < context.length; i++) {
-                    buildContainerDOM(context[i], $board_content, "x", 0);
+                    $last = buildResourceDOM(context[i], $board_content, "x", 0);
+                }
+                // remove margin of last child
+                if (context.length > 0) {
+                    let last_class = $last.attr("class").split(" ").pop();
+                    $last.removeClass(last_class);
                 }
             }
         }
 
-        function buildContainerDOM(resource, $layout, layout_orientation, layout_layer) {
+        function buildResourceDOM(resource, $layout, layout_orientation, layout_layer) {
             let $dom = $("<div></div>");
             let $name = $("<div></div>");
             let $content = $("<div></div>");
+
             if (resource.resourceType === "container") {
                 let container = resource;
                 let margin;
+                let $last;
+                // DOM setup
                 if (layout_orientation === "x") {
                     margin = "mr-" + (5-layout_layer);
                 } else {
                     margin = "mb-" + (5-layout_layer);
                 }
                 $dom.attr({
-                    "id": container.categoryId,
+                    "id": container._id,
                     "class": "board-container main " + margin
                 });
                 $name.attr({
-                    "id": container.categoryId + "-" + "name",
+                    "id": container._id + "-" + "name",
                     "class": "mb-4 name"
                 });
                 $content.attr({
-                    "id": container.categoryId + "-" + "content"
+                    "id": container._id + "-" + "content"
                 });
                 if (container.orientation === "x") {
                     $content.attr("class", "d-flex");
                 } else {
                     $content.attr("class", "d-flex flex-column");
                 }
+                // build children
                 for (let i = 0; i < container.children.length; i++) {
                     let res = container.children[i];
-                    if (res.resourceType === "container") {
-                        buildContainerDOM(res, $content,  container.orientation, layout_layer + 1);
-                    }
+                    $last = buildResourceDOM(res, $content,  container.orientation, layout_layer + 1);
+                }
+
+                if (container.children.length === 0) {
+                    // add placeholder if no children
+                    $filler = $("<div></div>");
+                    $filler.attr("class", "card-filler ui-state-disabled");
+                    $content.append($filler);
+                } else {
+                    // remove margin of last child
+                    let last_class = $last.attr("class").split(" ").pop();
+                    $last.removeClass(last_class);
                 }
             } else if (resource.resourceType === "list") {
+                let list = resource;
                 $dom.attr({
-                    "id": resource.listId,
-                    "class": "board-list mr-5 main"
+                    "id": list._id,
+                    "class": "board-list main mr-3"
                 });
                 $name.attr({
-                    "id": resource.listId + "-" + "name",
-                    "class": "mb-3 descriptor"
+                    "id": list._id + "-" + "name",
+                    "class": "descriptor mb-3"
                 });
                 $content.attr({
-                    "id": resource.listId + "-" + "content",
+                    "id": list._id + "-" + "content",
                     "class": "p-3 layout sortable"
                 });
+
+                if (list.children.length === 0) {
+                    // add placeholder if no cards
+                    $filler = $("<div></div>");
+                    $filler.attr("class", "card-filler ui-state-disabled");
+                    $content.append($filler);
+                }
             }
+
             $name.html(resource.name);
             $dom.append($name);
             $dom.append($content);
             $layout.append($dom);
+            return $dom;
         }
 
         function buildList(list) {
