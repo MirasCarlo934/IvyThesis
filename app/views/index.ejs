@@ -55,6 +55,15 @@
             else return 0;
         }
 
+        function setupSortables() {
+            $(".sortable").sortable({
+                items: "div:not(.ui-state-disabled)",
+                connectWith: ".sortable",
+                placeholder: "card-placeholder mb-3",
+                forcePlaceholderSize: true
+            }).disableSelection();
+        }
+
         function buildDOM() {
             builtResources++;
             if (builtResources === totalResources) {
@@ -71,12 +80,7 @@
                     $last.removeClass(last_class);
                 }
             }
-            $(".sortable").sortable({
-                items: "div:not(.ui-state-disabled)",
-                connectWith: ".sortable",
-                placeholder: "card-placeholder mb-3",
-                forcePlaceholderSize: true
-            }).disableSelection();
+            setupSortables();
         }
 
         function buildResourceDOM(resource, $layout, layout_orientation, layout_layer) {
