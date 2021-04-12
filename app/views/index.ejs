@@ -62,11 +62,27 @@
                 placeholder: "card-placeholder mb-3",
                 forcePlaceholderSize: true
             }).disableSelection();
-            $(".board-container-sortable").sortable({
+            $(".board-container-sortable-x").sortable({
                 items: "div:not(.ui-state-disabled)",
-                connectWith: ".board-container-sortable",
+                connectWith: ".board-container-sortable-x, .board-container-sortable-y",
                 placeholder: "card-placeholder mb-3",
-                forcePlaceholderSize: true
+                forcePlaceholderSize: true,
+                receive: function(event, ui) {
+                    let margin_class = ui.item.attr("class").split(" ").pop();
+                    ui.item.removeClass(margin_class);
+                    ui.item.addClass("mr-3"); // change this to be layer-dependent!
+                }
+            }).disableSelection();
+            $(".board-container-sortable-y").sortable({
+                items: "div:not(.ui-state-disabled)",
+                connectWith: ".board-container-sortable-x, .board-container-sortable-y",
+                placeholder: "card-placeholder mb-3",
+                forcePlaceholderSize: true,
+                receive: function(event, ui) {
+                    let margin_class = ui.item.attr("class").split(" ").pop();
+                    ui.item.removeClass(margin_class);
+                    ui.item.addClass("mb-3"); // change this to be layer-dependent!
+                }
             }).disableSelection();
         }
 
@@ -114,31 +130,28 @@
                 });
                 $content.attr({
                     "id": container._id + "-" + "content",
-                    "class": "d-flex ui-state-disabled board-container-sortable"
+                    "class": "d-flex ui-state-disabled"
                 });
-                if (container.orientation === "y") {
-                    $content.addClass("flex-column");
+                if (container.orientation === "x") {
+                    $content.addClass("board-container-sortable-x");
+                } else {
+                    $content.addClass("flex-column board-container-sortable-y");
                 }
-                // if (container.orientation === "x") {
-                //     $content.attr("class", "d-flex board-container-sortable");
-                // } else {
-                //     $content.attr("class", "d-flex flex-column board-container-sortable");
-                // }
                 // build children
                 for (let i = 0; i < container.children.length; i++) {
                     let res = container.children[i];
                     $last = buildResourceDOM(res, $content,  container.orientation, layout_layer + 1);
                 }
 
-                if (container.children.length === 0) {
-                    // add placeholder if no children
+                if (container.children.length === 0){
+                    // add filler if no children
                     $filler = $("<div></div>");
                     $filler.attr("class", "card-filler ui-state-disabled");
                     $content.append($filler);
                 } else {
                     // remove margin of last child
-                    let last_class = $last.attr("class").split(" ").pop();
-                    $last.removeClass(last_class);
+                    // let margin_class = $last.attr("class").split(" ").pop();
+                    // $last.removeClass(margin_class);
                 }
                 $name.html(container.name);
                 $dom.append($name);
@@ -165,7 +178,6 @@
                     let res = list.children[i];
                     $last = buildResourceDOM(res, $content,  "y", layout_layer + 1);
                 }
-
                 if (list.children.length === 0) {
                     // add placeholder if no cards
                     $filler = $("<div></div>");
