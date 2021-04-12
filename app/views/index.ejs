@@ -56,9 +56,15 @@
         }
 
         function setupSortables() {
-            $(".sortable").sortable({
+            $(".board-list-sortable").sortable({
+                items: "div:not(.ui-state-disabled, .board-container)",
+                connectWith: ".board-list-sortable",
+                placeholder: "card-placeholder mb-3",
+                forcePlaceholderSize: true
+            }).disableSelection();
+            $(".board-container-sortable").sortable({
                 items: "div:not(.ui-state-disabled)",
-                connectWith: ".sortable",
+                connectWith: ".board-container-sortable",
                 placeholder: "card-placeholder mb-3",
                 forcePlaceholderSize: true
             }).disableSelection();
@@ -69,8 +75,8 @@
             if (builtResources === totalResources) {
                 let $board_content = $("#board .content");
                 let $last;
-                context.sort(sortFunc);
                 $board_content.html("");
+                context.sort(sortFunc);
                 for (let i = 0; i < context.length; i++) {
                     $last = buildResourceDOM(context[i], $board_content, "x", 0);
                 }
@@ -104,16 +110,20 @@
                 });
                 $name.attr({
                     "id": container._id + "-" + "name",
-                    "class": "mb-4 name"
+                    "class": "mb-4 name ui-state-disabled"
                 });
                 $content.attr({
-                    "id": container._id + "-" + "content"
+                    "id": container._id + "-" + "content",
+                    "class": "d-flex ui-state-disabled board-container-sortable"
                 });
-                if (container.orientation === "x") {
-                    $content.attr("class", "d-flex");
-                } else {
-                    $content.attr("class", "d-flex flex-column");
+                if (container.orientation === "y") {
+                    $content.addClass("flex-column");
                 }
+                // if (container.orientation === "x") {
+                //     $content.attr("class", "d-flex board-container-sortable");
+                // } else {
+                //     $content.attr("class", "d-flex flex-column board-container-sortable");
+                // }
                 // build children
                 for (let i = 0; i < container.children.length; i++) {
                     let res = container.children[i];
@@ -144,11 +154,11 @@
                 });
                 $name.attr({
                     "id": list._id + "-" + "name",
-                    "class": "descriptor mb-3"
+                    "class": "descriptor ui-state-disabled mb-3"
                 });
                 $content.attr({
                     "id": list._id + "-" + "content",
-                    "class": "p-3 layout sortable"
+                    "class": "p-3 layout ui-state-disabled board-list-sortable"
                 });
                 // build children
                 for (let i = 0; i < list.children.length; i++) {
