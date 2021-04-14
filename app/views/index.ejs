@@ -51,18 +51,130 @@
         let totalResources = 0;
         let builtResources = 0;
 
+        // region UTILITY FUNCTIONS
+
         let sortFunc = function(a,b) {
             if (a.order < b.order) return -1;
             else if (a.order > b.order) return 1;
             else return 0;
         }
 
+        // endregion
+
+        // region API FUNCTIONS
+
+        let rearrangeChildrenBasedOnDOM = function(childrenDom) { // a function inside resource object
+            console.log(childrenDom);
+            if (!this.hasOwnProperty("_id")) return; // for invalid calls to this function
+            for (let i = 0; i < childrenDom.length; i++) {
+                let $childDom = $(childrenDom[i]);
+                if ($childDom.attr("class").includes("filler")) continue; // reject filler divs
+                let childRes = getResourceFromArray(context, $childDom.attr("id").split("-")[0]);
+                let url;
+                childRes.order = i;
+                console.log(childRes.resourceType + ": " + childRes._id);
+                if (childRes.resourceType === "container") {
+                    childRes.parentId = this._id;
+                    url = host + containersPath + "/" + childRes._id;
+                } else if (childRes.resourceType === "list") {
+                    childRes.parentId = this._id;
+                    url = host + listsPath + "/" + childRes._id;
+                } else { // card
+                    url = host + cardsPath + "/" + childRes._id;
+                    childRes.listId = this._id;
+                }
+                $.ajax({
+                    url: url,
+                    type: "PUT",
+                    data: childRes
+                });
+            }
+            this.children.sort(sortFunc);
+        }
+
+        // endregion
+
+        // region RESOURCE MANAGEMENT FUNCTIONS
+
+        function buildResourceObj(baseObj, resourceType) {
+            baseObj.resourceType = resourceType;
+            baseObj.updateChildren = rearrangeChildrenBasedOnDOM;
+            return baseObj;
+        }
+
+        function getResourceFromArray(resourceArr, resourceId) {
+            for (let i = 0; i < resourceArr.length; i++) {
+                if (resourceArr[i]._id === resourceId) return resourceArr[i];
+                else if (resourceArr[i].hasOwnProperty("children")) {
+                    let resource = getResourceFromArray(resourceArr[i].children, resourceId);
+                    if (resource !== null) return resource;
+                }
+            }
+            return null;
+        }
+
+        function buildListResource(list) {
+            totalResources++;
+            list.children = [];
+            // get children cards
+            $.get(host + cardsPath + "?listId=" + list._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    data[i].resourceType = "card";
+                    list.children.push(data[i]);
+                }
+                buildDOM();
+            });
+            return list;
+        }
+
+        function buildContainerResource(container) {
+            let builtChildren = 0;
+            totalResources++;
+            container.children = [];
+            // get child containers
+            $.get(host + containersPath + "?parentId=" + container._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    let child = data[i];
+                    buildResourceObj(child, "container");
+                    buildContainerResource(child);
+                    container.children.push(child);
+                }
+                if (builtChildren) buildDOM();
+                else builtChildren++;
+            });
+            // get child lists
+            $.get(host + listsPath + "?parentId=" + container._id, function(data) {
+                for (let i = 0; i < data.length; i++) {
+                    let child = data[i];
+                    buildResourceObj(child, "list");
+                    buildListResource(child);
+                    container.children.push(child);
+                }
+                if (builtChildren) buildDOM();
+                else builtChildren++;
+            });
+        }
+
+        // endregion
+
+        // region DOM-RELATED FUNCTIONS
+
         function setupSortables() {
             $(".board-list-sortable").sortable({
                 items: "div:not(.ui-state-disabled, .board-container)",
                 connectWith: ".board-list-sortable",
                 placeholder: "card-placeholder mb-3",
-                forcePlaceholderSize: true
+                forcePlaceholderSize: true,
+                receive: function(event, ui) {
+                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                    console.log(resource.name + " received ui");
+                    resource.updateChildren($(this).children());
+                },
+                stop: function(event, ui) {
+                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                    console.log(resource.name + " stopped sorting");
+                    resource.updateChildren($(this).children());
+                }
             }).disableSelection();
             $(".board-container-sortable-x").sortable({
                 items: "div:not(.ui-state-disabled)",
@@ -70,9 +182,17 @@
                 placeholder: "card-placeholder mb-3",
                 forcePlaceholderSize: true,
                 receive: function(event, ui) {
+                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                     let margin_class = ui.item.attr("class").split(" ").pop();
+                    console.log(resource.name + " received ui");
                     ui.item.removeClass(margin_class);
                     ui.item.addClass("mr-3"); // change this to be layer-dependent!
+                    resource.updateChildren($(this).children());
+                },
+                stop: function(event, ui) {
+                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                    console.log(resource.name + " stopped sorting");
+                    resource.updateChildren($(this).children());
                 }
             }).disableSelection();
             $(".board-container-sortable-y").sortable({
@@ -81,9 +201,16 @@
                 placeholder: "card-placeholder mb-3",
                 forcePlaceholderSize: true,
                 receive: function(event, ui) {
+                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                     let margin_class = ui.item.attr("class").split(" ").pop();
+                    console.log(resource.name + " received ui");
                     ui.item.removeClass(margin_class);
                     ui.item.addClass("mb-3"); // change this to be layer-dependent!
+                },
+                stop: function(event, ui) {
+                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                    console.log(resource.name + " stopped sorting");
+                    resource.updateChildren($(this).children());
                 }
             }).disableSelection();
         }
@@ -145,11 +272,13 @@
                     $last = buildResourceDOM(res, $content,  container.orientation, layout_layer + 1);
                 }
 
-                if (container.children.length === 0){
-                    // add filler if no children
-                    $filler = $("<div></div>");
-                    $filler.attr("class", "card-filler ui-state-disabled");
-                    $content.append($filler);
+                if (container.children.length === 0) {
+                    if (container.orientation === "y") {
+                        // add filler to preserve size
+                        $filler = $("<div></div>");
+                        $filler.attr("class", "card-filler ui-state-disabled");
+                        $content.append($filler);
+                    }
                 } else {
                     // remove margin of last child
                     // let margin_class = $last.attr("class").split(" ").pop();
@@ -207,47 +336,7 @@
             return $dom;
         }
 
-        function buildList(list) {
-            totalResources++;
-            list.children = [];
-            // get children cards
-            $.get(host + cardsPath + "?listId=" + list._id, function(data) {
-                for (let i = 0; i < data.length; i++) {
-                    data[i].resourceType = "card";
-                    list.children.push(data[i]);
-                }
-                buildDOM();
-            });
-            return list;
-        }
-
-        function buildContainer(container) {
-            let builtChildren = 0;
-            totalResources++;
-            container.children = [];
-            // get child containers
-            $.get(host + containersPath + "?parentId=" + container._id, function(data) {
-                for (let i = 0; i < data.length; i++) {
-                    let child = data[i];
-                    child.resourceType = "container";
-                    buildContainer(child);
-                    container.children.push(child);
-                }
-                if (builtChildren) buildDOM();
-                else builtChildren++;
-            });
-            // get child lists
-            $.get(host + listsPath + "?parentId=" + container._id, function(data) {
-                for (let i = 0; i < data.length; i++) {
-                    let child = data[i];
-                    child.resourceType = "list";
-                    buildList(child);
-                    container.children.push(child);
-                }
-                if (builtChildren) buildDOM();
-                else builtChildren++;
-            });
-        }
+        // endregion
 
         $(function() {
 
@@ -255,36 +344,19 @@
             $.get(host + containersPath + "?parentId=board", function(data) {
                 for (let i = 0; i < data.length; i++) {
                     let container = data[i];
-                    container.resourceType = "container";
-                    buildContainer(container);
+                    buildResourceObj(container, "container");
+                    buildContainerResource(container);
                     context.push(container);
                 }
             });
             $.get(host + listsPath + "?parentId=board", function(data) {
                 for (let i = 0; i < data.length; i++) {
                     let list = data[i];
-                    list.resourceType = "list";
-                    buildList(list);
+                    buildResourceObj(list, "list");
+                    buildListResource(list);
                     context.push(list);
                 }
-            })
-
-            // build context (OLD)
-            // $.get(host + categoriesPath, function(data1) {
-            //     $.get(host + listsPath + "?ungrouped=true", function(data2) {
-            //         for (let i = 0; i < data1.length; i++) {
-            //             data1[i].resourceType = "category";
-            //             context.push(buildCategory(data1[i]));
-            //         }
-            //         for (let i = 0; i < data2.length; i++) {
-            //             data2[i].resourceType = "list";
-            //             context.push(buildList(data2[i]));
-            //         }
-            //     });
-            // });
-
-            // build DOM
-            // $("#board .content").html("<div>test</div>");
+            });
 
         });
     </script>

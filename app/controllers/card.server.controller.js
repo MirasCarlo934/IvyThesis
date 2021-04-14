@@ -60,9 +60,7 @@ exports.update = function(req, res, next) {
             }
         });
     } else {
-        Card.findOneAndUpdate({
-            order: req.card.order
-        }, req.body, function (err, card) {
+        Card.findByIdAndUpdate(req.card.id, req.body, function (err, card) {
             if (err) {
                 return next(err);
             } else {

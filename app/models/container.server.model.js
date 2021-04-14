@@ -9,7 +9,7 @@ var ContainerSchema = new Schema({
         min: 0
     },
     parentId: String,
-    type: String // category/section
+    orientation: String // x, y
 });
 
 mongoose.model("Container", ContainerSchema);

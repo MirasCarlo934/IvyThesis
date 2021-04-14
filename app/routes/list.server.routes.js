@@ -5,10 +5,11 @@ module.exports = function(app) {
         .post(lists.create)
         .get(lists.list);
 
-    app.route("/lists/:listOrder")
+    app.route("/lists/:listId")
         .get(lists.read)
         .put(lists.update)
         .delete(lists.delete);
 
     app.param("listOrder", lists.listByOrder);
+    app.param("listId", lists.listById);
 }

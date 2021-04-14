@@ -72,9 +72,7 @@ exports.update = function(req, res, next) {
             }
         });
     } else {
-        List.findOneAndUpdate({
-            order: req.list.order
-        }, req.body, function (err, list) {
+        List.findByIdAndUpdate(req.list.id, req.body, function (err, list) {
             if (err) {
                 return next(err);
             } else {
@@ -100,6 +98,17 @@ exports.listByOrder = function(req, res, next, order) {
     List.findOne({
         order: order
     }, function(err, list) {
+        if (err) {
+            return next(err);
+        } else {
+            req.list = list;
+            next();
+        }
+    });
+};
+
+exports.listById = function(req, res, next, id) {
+    List.findById(id, function(err, list) {
         if (err) {
             return next(err);
         } else {
