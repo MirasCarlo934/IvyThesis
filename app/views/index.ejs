@@ -309,12 +309,10 @@
                     let res = list.children[i];
                     $last = buildResourceDOM(res, $content,  "y", layout_layer + 1);
                 }
-                if (list.children.length === 0) {
-                    // add placeholder if no cards
-                    $filler = $("<div></div>");
-                    $filler.attr("class", "card-filler ui-state-disabled");
-                    $content.append($filler);
-                }
+                // add filler to preserve size
+                $filler = $("<div></div>");
+                $filler.attr("class", "card-filler ui-state-disabled");
+                $content.append($filler);
                 $name.html(list.name);
                 $dom.append($name);
                 $dom.append($content);
