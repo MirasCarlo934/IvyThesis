@@ -57,6 +57,7 @@
         let context = [];
         let totalResources = 0;
         let builtResources = 0;
+        let menuOpen = false;
 
         let modalResource; // the current resource being modified by modal
         let $modalResourceDOM; // the current resource DOM being modified by modal
@@ -319,6 +320,12 @@
 
             // sortables
 
+            // $(".board-sortable").sortable({
+            //     items: "div:not(.ui-state-disabled)",
+            //     connectWith: [".board-category-sortable", ".board-container-sortable", ".board-section-sortable"],
+            //     placeholder: "card-placeholder",
+            //     forcePlaceholderSize: true
+            // })
             $(".board-list-sortable").sortable({
                 items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-section, .board-list)",
                 connectWith: ".board-list-sortable",
@@ -335,102 +342,102 @@
                     // resource.updateChildren($(this).children());
                 }
             }).disableSelection();
-            $(".board-category-sortable").sortable({
-                items: "div:not(.ui-state-disabled, .board-category)",
-                connectWith: [".board-category-sortable", ".board-container-sortable"],
-                placeholder: "card-placeholder mb-3",
-                forcePlaceholderSize: true,
-                activate: function(event, ui) {
-                    console.log("activate category");
-                },
-                start: function(event, ui) {
-                    console.log("start category");
-                    if (ui.item.is(".board-list")) {
-                        console.log("start sorting list");
-                        $(".board-container-sortable").sortable("disable");
-                        $(".board-container-sortable").sortable("refresh");
-                        $(this).sortable("refresh");
-                        console.log("disabled sorting for all containers")
-                    }
-                },
-                over: function(event, ui) {
-                    console.log("over category");
-                },
-                beforeStop: function(event, ui) {
-                    console.log("beforeStop category");
-                    if (ui.item.is(".board-list") && $(".board-container-sortable").find(".card-placeholder").length) {
-                        $(".board-container-sortable").sortable("disable");
-                    }
-                },
-                stop: function(event, ui) {
-                    console.log("stop category");
-                    if (ui.item.is(".board-list")) {
-                        $(".board-container-sortable").sortable("enable");
-                        $(".board-container-sortable").sortable("refresh");
-                        $(this).sortable("refresh");
-                        console.log("enabled sorting for all containers")
-                    }
-                    // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                    // console.log(resource.name + " stopped sorting");
-                    // resource.updateChildren($(this).children());
-                },
-                receive: function(event, ui) {
-                    // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                    // let margin_class = ui.item.attr("class").split(" ").pop();
-                    // console.log(resource.name + " received ui");
-                    // ui.item.removeClass(margin_class);
-                    // ui.item.addClass("mr-3"); // change this to be layer-dependent!
-                    // resource.updateChildren($(this).children());
-                }
-            }).disableSelection();
-            $(".board-container-sortable").sortable({
-                items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-list)",
-                connectWith: [".board-container-sortable", ".board-category-sortable"],
-                placeholder: "card-placeholder mb-3",
-                forcePlaceholderSize: true,
-                activate: function(event, ui) {
-                    console.log("activate container");
-                },
-                start: function(event, ui) {
-                    console.log("start container");
-                },
-                over: function(event, ui) {
-                    console.log("over container");
-                },
-                stop: function(event, ui) {
-                    console.log("stop container");
-                    console.log(ui.item.attr("id"));
-                    // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                    // console.log(resource.name + " stopped sorting");
-                    // resource.updateChildren($(this).children());
-                },
-                receive: function(event, ui) {
-                    console.log(ui.item.attr("id"));
-                    // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                    // let margin_class = ui.item.attr("class").split(" ").pop();
-                    // console.log(resource.name + " received ui");
-                    // ui.item.removeClass(margin_class);
-                    // ui.item.addClass("mb-3"); // change this to be layer-dependent!
-                }
-            }).disableSelection();
-            $(".board-section-sortable").sortable({
-                items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-section)",
-                connectWith: [".board-section-sortable", ".board-category-sortable"],
-                placeholder: "card-placeholder mb-3",
-                forcePlaceholderSize: true,
-                receive: function(event, ui) {
-                    // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                    // let margin_class = ui.item.attr("class").split(" ").pop();
-                    // console.log(resource.name + " received ui");
-                    // ui.item.removeClass(margin_class);
-                    // ui.item.addClass("mb-3"); // change this to be layer-dependent!
-                },
-                stop: function(event, ui) {
-                    // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                    // console.log(resource.name + " stopped sorting");
-                    // resource.updateChildren($(this).children());
-                }
-            }).disableSelection();
+            // $(".board-category-sortable").sortable({
+            //     items: "div:not(.ui-state-disabled, .board-category)",
+            //     connectWith: [".board-category-sortable", ".board-sortable", ".board-container-sortable"],
+            //     placeholder: "card-placeholder mb-3",
+            //     forcePlaceholderSize: true,
+            //     activate: function(event, ui) {
+            //         console.log("activate category");
+            //     },
+            //     start: function(event, ui) {
+            //         console.log("start category");
+            //         if (ui.item.is(".board-list")) {
+            //             console.log("start sorting list");
+            //             $(".board-container-sortable").sortable("disable");
+            //             $(".board-container-sortable").sortable("refresh");
+            //             $(this).sortable("refresh");
+            //             console.log("disabled sorting for all containers")
+            //         }
+            //     },
+            //     over: function(event, ui) {
+            //         console.log("over category");
+            //     },
+            //     beforeStop: function(event, ui) {
+            //         console.log("beforeStop category");
+            //         if (ui.item.is(".board-list") && $(".board-container-sortable").find(".card-placeholder").length) {
+            //             $(".board-container-sortable").sortable("disable");
+            //         }
+            //     },
+            //     stop: function(event, ui) {
+            //         console.log("stop category");
+            //         if (ui.item.is(".board-list")) {
+            //             $(".board-container-sortable").sortable("enable");
+            //             $(".board-container-sortable").sortable("refresh");
+            //             $(this).sortable("refresh");
+            //             console.log("enabled sorting for all containers")
+            //         }
+            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+            //         // console.log(resource.name + " stopped sorting");
+            //         // resource.updateChildren($(this).children());
+            //     },
+            //     receive: function(event, ui) {
+            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+            //         // let margin_class = ui.item.attr("class").split(" ").pop();
+            //         // console.log(resource.name + " received ui");
+            //         // ui.item.removeClass(margin_class);
+            //         // ui.item.addClass("mr-3"); // change this to be layer-dependent!
+            //         // resource.updateChildren($(this).children());
+            //     }
+            // }).disableSelection();
+            // $(".board-container-sortable").sortable({
+            //     items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-list)",
+            //     connectWith: [".board-container-sortable", ".board-category-sortable"],
+            //     placeholder: "card-placeholder mb-3",
+            //     forcePlaceholderSize: true,
+            //     activate: function(event, ui) {
+            //         console.log("activate container");
+            //     },
+            //     start: function(event, ui) {
+            //         console.log("start container");
+            //     },
+            //     over: function(event, ui) {
+            //         console.log("over container");
+            //     },
+            //     stop: function(event, ui) {
+            //         console.log("stop container");
+            //         console.log(ui.item.attr("id"));
+            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+            //         // console.log(resource.name + " stopped sorting");
+            //         // resource.updateChildren($(this).children());
+            //     },
+            //     receive: function(event, ui) {
+            //         console.log(ui.item.attr("id"));
+            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+            //         // let margin_class = ui.item.attr("class").split(" ").pop();
+            //         // console.log(resource.name + " received ui");
+            //         // ui.item.removeClass(margin_class);
+            //         // ui.item.addClass("mb-3"); // change this to be layer-dependent!
+            //     }
+            // }).disableSelection();
+            // $(".board-section-sortable").sortable({
+            //     items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-section)",
+            //     connectWith: [".board-section-sortable", ".board-sortable", ".board-category-sortable"],
+            //     placeholder: "card-placeholder mb-3",
+            //     forcePlaceholderSize: true,
+            //     receive: function(event, ui) {
+            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+            //         // let margin_class = ui.item.attr("class").split(" ").pop();
+            //         // console.log(resource.name + " received ui");
+            //         // ui.item.removeClass(margin_class);
+            //         // ui.item.addClass("mb-3"); // change this to be layer-dependent!
+            //     },
+            //     stop: function(event, ui) {
+            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+            //         // console.log(resource.name + " stopped sorting");
+            //         // resource.updateChildren($(this).children());
+            //     }
+            // }).disableSelection();
         }
 
         function buildDOM() {
@@ -548,7 +555,8 @@
                     "class": "p-3 layout ui-state-disabled board-list-sortable"
                 });
                 // add add_btn
-                let $filler = $("<div></div>");
+                let $filler = $("<div class='card-filler'></div>");
+                let $add_btn_container = $("<div></div>");
                 let $add_btn = $("<button></button>")
                 $add_btn.attr({
                     "id": list._id + "-add-btn",
@@ -556,9 +564,10 @@
                     "class": "board-list-add-btn btn btn-primary"
                 });
                 $add_btn.html("<i class='fas fa-plus'></i>")
-                $filler.attr("class", "board-list-add-btn-div card-filler ui-state-disabled");
-                $filler.html($add_btn);
+                $add_btn_container.attr("class", "board-list-add-btn-div ui-state-disabled");
+                $add_btn_container.html($add_btn);
                 $content.append($filler);
+                $content.append($add_btn_container);
                 // build children
                 for (let i = 0; i < list.children.length; i++) {
                     let res = list.children[i];
@@ -591,11 +600,20 @@
         $(function() {
 
             // initializations
+            $("#board-menu-items").hide();
             $("#board-modal-save-btn").click(function() {
                 modalSaveCallback();
             });
             $("#board-modal-delete-btn").click(function() {
                 modalDeleteCallback();
+            });
+            $("#board-menu-show-btn").click(function() {
+                if (menuOpen) {
+                    $("#board-menu-items").hide();
+                } else {
+                    $("#board-menu-items").show();
+                }
+                menuOpen = !menuOpen;
             });
 
             // build context
@@ -627,8 +645,19 @@
 <!--    <img src="img/testimg.png" alt="Test"/>-->
 <div class="layout-body container-fluid">
 
+    <div id="board-menu" class="position-fixed bottom-0 end-0 p-4">
+        <div id="board-menu-items" class="m-4">
+            <button type="button" class="btn btn-secondary float-end">Add a category</button><br/><br/>
+            <button type="button" class="btn btn-secondary float-end">Add a section</button><br/><br/>
+            <button type="button" class="btn btn-secondary float-end">Add a list</button><br/><br/>
+        </div>
+        <br/>
+        <button id="board-menu-show-btn" type="button" class="btn btn-primary float-end"><i class="fas fa-plus"></i></button>
+    </div>
+
 <!--    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#board-modal" data-bs-whatever="@mdo">Open modal for @mdo</button>-->
 
+    <!-- MODAL -->
     <div class="modal fade" id="board-modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
