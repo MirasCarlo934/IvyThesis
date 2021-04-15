@@ -204,6 +204,25 @@
                 $modal_desc_input.val(modalResource.description);
                 $modal.modal("show");
             });
+            $(".board-category").click(function() {
+                let $modal = $("#board-modal");
+                let $modal_title = $modal.find("#board-modal-title");
+                let $modal_name_input = $modal.find("#board-modal-name-input");
+                let $modal_desc_input = $modal.find("#board-modal-description-input");
+                modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                $modalResourceDOM = $(this);
+                modalCallback = function() {
+                    modalResource.name = $modal_name_input.val();
+                    modalResource.description = $modal_desc_input.val();
+                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
+                    putResource(host + containersPath + "/" + modalResource._id, modalResource);
+                    $modal.modal("hide");
+                }
+                $modal_title.html("Edit category");
+                $modal_name_input.val(modalResource.name);
+                $modal_desc_input.val(modalResource.description);
+                $modal.modal("show");
+            });
             $(".board-list-sortable").sortable({
                 items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-section, .board-list)",
                 connectWith: ".board-list-sortable",
