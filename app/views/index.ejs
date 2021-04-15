@@ -166,51 +166,13 @@
         }
 
         function setupJquery() {
-            $(".board-card").click(function() {
-                let $modal = $("#board-modal");
-                let $modal_title = $modal.find("#board-modal-title");
-                let $modal_name_input = $modal.find("#board-modal-name-input");
-                let $modal_desc_input = $modal.find("#board-modal-description-input");
-                let cardResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                $modalResourceDOM = $(this);
-                modalCallback = function() {
-                    modalResource.name = $modal_name_input.val();
-                    modalResource.description = $modal_desc_input.val();
-                    $modalResourceDOM.find(".card-body").html(modalResource.name);
-                    putResource(host + cardsPath + "/" + modalResource._id, modalResource);
-                    $modal.modal("hide");
-                }
-                $modal_title.html("Edit card");
-                $modal_name_input.val(cardResource.name);
-                $modal_desc_input.val(cardResource.description);
-                $modal.modal("show");
-            });
-            $(".board-section").click(function() {
+            $(".board-category-name").click(function() {
                 let $modal = $("#board-modal");
                 let $modal_title = $modal.find("#board-modal-title");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
                 modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                $modalResourceDOM = $(this);
-                modalCallback = function() {
-                    modalResource.name = $modal_name_input.val();
-                    modalResource.description = $modal_desc_input.val();
-                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
-                    putResource(host + containersPath + "/" + modalResource._id, modalResource);
-                    $modal.modal("hide");
-                }
-                $modal_title.html("Edit section");
-                $modal_name_input.val(modalResource.name);
-                $modal_desc_input.val(modalResource.description);
-                $modal.modal("show");
-            });
-            $(".board-category").click(function() {
-                let $modal = $("#board-modal");
-                let $modal_title = $modal.find("#board-modal-title");
-                let $modal_name_input = $modal.find("#board-modal-name-input");
-                let $modal_desc_input = $modal.find("#board-modal-description-input");
-                modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                $modalResourceDOM = $(this);
+                $modalResourceDOM = $(this).parent();
                 modalCallback = function() {
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
@@ -223,6 +185,64 @@
                 $modal_desc_input.val(modalResource.description);
                 $modal.modal("show");
             });
+            $(".board-section-name").click(function() {
+                let $modal = $("#board-modal");
+                let $modal_title = $modal.find("#board-modal-title");
+                let $modal_name_input = $modal.find("#board-modal-name-input");
+                let $modal_desc_input = $modal.find("#board-modal-description-input");
+                modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                $modalResourceDOM = $(this).parent();
+                modalCallback = function() {
+                    modalResource.name = $modal_name_input.val();
+                    modalResource.description = $modal_desc_input.val();
+                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
+                    putResource(host + containersPath + "/" + modalResource._id, modalResource);
+                    $modal.modal("hide");
+                }
+                $modal_title.html("Edit section");
+                $modal_name_input.val(modalResource.name);
+                $modal_desc_input.val(modalResource.description);
+                $modal.modal("show");
+            });
+            $(".board-list-name").click(function() {
+                let $modal = $("#board-modal");
+                let $modal_title = $modal.find("#board-modal-title");
+                let $modal_name_input = $modal.find("#board-modal-name-input");
+                let $modal_desc_input = $modal.find("#board-modal-description-input");
+                modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                $modalResourceDOM = $(this).parent();
+                modalCallback = function() {
+                    modalResource.name = $modal_name_input.val();
+                    modalResource.description = $modal_desc_input.val();
+                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
+                    putResource(host + listsPath + "/" + modalResource._id, modalResource);
+                    $modal.modal("hide");
+                }
+                $modal_title.html("Edit list");
+                $modal_name_input.val(modalResource.name);
+                $modal_desc_input.val(modalResource.description);
+                $modal.modal("show");
+            });
+            $(".board-card").click(function() {
+                let $modal = $("#board-modal");
+                let $modal_title = $modal.find("#board-modal-title");
+                let $modal_name_input = $modal.find("#board-modal-name-input");
+                let $modal_desc_input = $modal.find("#board-modal-description-input");
+                modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                $modalResourceDOM = $(this);
+                modalCallback = function() {
+                    modalResource.name = $modal_name_input.val();
+                    modalResource.description = $modal_desc_input.val();
+                    $modalResourceDOM.find(".card-body").html(modalResource.name);
+                    putResource(host + cardsPath + "/" + modalResource._id, modalResource);
+                    $modal.modal("hide");
+                }
+                $modal_title.html("Edit card");
+                $modal_name_input.val(modalResource.name);
+                $modal_desc_input.val(modalResource.description);
+                $modal.modal("show");
+            });
+
             $(".board-list-sortable").sortable({
                 items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-section, .board-list)",
                 connectWith: ".board-list-sortable",
@@ -371,7 +391,7 @@
                 });
                 $name.attr({
                     "id": container._id + "-" + "name",
-                    "class": "mb-4 name ui-state-disabled"
+                    "class": "board-category-name mb-4 ui-state-disabled"
                 });
                 $content.attr({
                     "id": container._id + "-" + "content",
@@ -408,7 +428,7 @@
                 });
                 $name.attr({
                     "id": section._id + "-" + "name",
-                    "class": "name ui-state-disabled"
+                    "class": "board-section-name ui-state-disabled"
                 });
                 $content.attr({
                     "id": section._id + "-" + "content",
@@ -445,7 +465,7 @@
                 });
                 $name.attr({
                     "id": list._id + "-" + "name",
-                    "class": "descriptor ui-state-disabled mb-3"
+                    "class": "board-list-name ui-state-disabled mb-3"
                 });
                 $content.attr({
                     "id": list._id + "-" + "content",
@@ -468,7 +488,7 @@
                 let $body = $("<div></div>");
                 $dom.attr({
                     "id": card._id,
-                    "class": "card board-card main p-2 mb-3"
+                    "class": "board-card card main p-2 mb-3"
                 });
                 $body.attr({
                     "class": "card-body ui-state-disabled"
