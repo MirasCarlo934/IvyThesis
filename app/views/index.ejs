@@ -10,7 +10,7 @@
         div.layout {
             border: 1px solid gray;
             min-width: 250px;
-            min-height: 100px;
+            /*min-height: 100px;*/
         }
         div.descriptor, div.name {
             border: 1px solid red;
@@ -62,6 +62,16 @@
         let $modalResourceDOM; // the current resource DOM being modified by modal
         let modalCallback; // the callback function to be called by the modal;
 
+        let CardPostJson = function(name, description, listId, order) {
+            return {
+                "name": name,
+                "description": description,
+                "listId": listId,
+                "order": order,
+                "resourceType": "card"
+            }
+        }
+
         let sortFunc = function(a,b) {
             if (a.order < b.order) return -1;
             else if (a.order > b.order) return 1;
@@ -74,6 +84,17 @@
                     url: url,
                     type: "PUT",
                     data: data
+                });
+            }
+        }
+
+        function postResource(url, data, successFunc) {
+            if (ENV === "production" || ENV === "testing") {
+                return $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: data,
+                    success: successFunc
                 });
             }
         }
@@ -166,6 +187,30 @@
         }
 
         function setupJquery() {
+            $(".board-list-add-btn").click(function() {
+                let $modal = $("#board-modal");
+                let $modal_title = $modal.find("#board-modal-title");
+                let $modal_name_input = $modal.find("#board-modal-name-input");
+                let $modal_desc_input = $modal.find("#board-modal-description-input");
+                let listResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                modalResource = CardPostJson("noname", "nodesc", listResource._id, listResource.children.length);
+                modalCallback = function() { // modal callback
+                    console.log("adding new card");
+                    let $listContent = $("#" + listResource._id + "-content");
+                    modalResource.name = $modal_name_input.val();
+                    modalResource.description = $modal_desc_input.val();
+                    postResource(host + cardsPath, modalResource, function(data) { // callback after post success
+                        data.resourceType = "card";
+                        buildResourceDOM(data,  $listContent);
+                        console.log("new card added");
+                    });
+                    $modal.modal("hide");
+                }
+                $modal_title.html("Add new card");
+                $modal_name_input.val("");
+                $modal_desc_input.val("");
+                $modal.modal("show");
+            })
             $(".board-category-name").click(function() {
                 let $modal = $("#board-modal");
                 let $modal_title = $modal.find("#board-modal-title");
@@ -471,15 +516,23 @@
                     "id": list._id + "-" + "content",
                     "class": "p-3 layout ui-state-disabled board-list-sortable"
                 });
+                // add add_btn
+                let $filler = $("<div></div>");
+                let $add_btn = $("<button></button>")
+                $add_btn.attr({
+                    "id": list._id + "-add-btn",
+                    "type": "button",
+                    "class": "board-list-add-btn btn btn-primary"
+                });
+                $add_btn.html("<i class='fas fa-plus'></i>")
+                $filler.attr("class", "board-list-add-btn-div card-filler ui-state-disabled");
+                $filler.html($add_btn);
+                $content.append($filler);
                 // build children
                 for (let i = 0; i < list.children.length; i++) {
                     let res = list.children[i];
                     $last = buildResourceDOM(res, $content,  "y", layout_layer + 1);
                 }
-                // add filler to preserve size
-                let $filler = $("<div></div>");
-                $filler.attr("class", "card-filler ui-state-disabled");
-                $content.append($filler);
                 $name.html(list.name);
                 $dom.append($name);
                 $dom.append($content);
@@ -495,6 +548,8 @@
                 });
                 $body.html(card.name);
                 $dom.append($body);
+                $layout.find(".board-list-add-btn-div").before($dom);
+                return $dom;
             }
 
             $layout.append($dom);
