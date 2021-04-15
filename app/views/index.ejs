@@ -60,7 +60,8 @@
 
         let modalResource; // the current resource being modified by modal
         let $modalResourceDOM; // the current resource DOM being modified by modal
-        let modalCallback; // the callback function to be called by the modal;
+        let modalSaveCallback; // the callback function to be called by the modal save button
+        let modalDeleteCallback; // the callback function to be called by the modal delete button
 
         let CardPostJson = function(name, description, listId, order) {
             return {
@@ -90,13 +91,20 @@
 
         function postResource(url, data, successFunc) {
             if (ENV === "production" || ENV === "testing") {
-                return $.ajax({
+                $.ajax({
                     url: url,
                     type: "POST",
                     data: data,
                     success: successFunc
                 });
             }
+        }
+
+        function deleteResource(url) {
+            $.ajax({
+                url: url,
+                type: "DELETE"
+            });
         }
 
         let rearrangeChildrenBasedOnDOM = function(childrenDom) { // a function inside resource object
@@ -187,14 +195,18 @@
         }
 
         function setupJquery() {
+
+            // "add" modal configurations
+
             $(".board-list-add-btn").click(function() {
                 let $modal = $("#board-modal");
                 let $modal_title = $modal.find("#board-modal-title");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
+                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 let listResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 modalResource = CardPostJson("noname", "nodesc", listResource._id, listResource.children.length);
-                modalCallback = function() { // modal callback
+                modalSaveCallback = function() { // modal callback
                     console.log("adding new card");
                     let $listContent = $("#" + listResource._id + "-content");
                     modalResource.name = $modal_name_input.val();
@@ -206,25 +218,31 @@
                     });
                     $modal.modal("hide");
                 }
+                $modal_delete_btn.hide();
                 $modal_title.html("Add new card");
                 $modal_name_input.val("");
                 $modal_desc_input.val("");
                 $modal.modal("show");
             })
+
+            // "edit" modal configurations
+
             $(".board-category-name").click(function() {
                 let $modal = $("#board-modal");
                 let $modal_title = $modal.find("#board-modal-title");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
+                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
-                modalCallback = function() {
+                modalSaveCallback = function() {
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
                     putResource(host + containersPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
+                $modal_delete_btn.show();
                 $modal_title.html("Edit category");
                 $modal_name_input.val(modalResource.name);
                 $modal_desc_input.val(modalResource.description);
@@ -235,15 +253,17 @@
                 let $modal_title = $modal.find("#board-modal-title");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
+                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
-                modalCallback = function() {
+                modalSaveCallback = function() {
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
                     putResource(host + containersPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
+                $modal_delete_btn.show();
                 $modal_title.html("Edit section");
                 $modal_name_input.val(modalResource.name);
                 $modal_desc_input.val(modalResource.description);
@@ -254,15 +274,17 @@
                 let $modal_title = $modal.find("#board-modal-title");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
+                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
-                modalCallback = function() {
+                modalSaveCallback = function() {
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
                     putResource(host + listsPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
+                $modal_delete_btn.show();
                 $modal_title.html("Edit list");
                 $modal_name_input.val(modalResource.name);
                 $modal_desc_input.val(modalResource.description);
@@ -273,20 +295,29 @@
                 let $modal_title = $modal.find("#board-modal-title");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
+                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this);
-                modalCallback = function() {
+                modalSaveCallback = function() {
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
                     $modalResourceDOM.find(".card-body").html(modalResource.name);
                     putResource(host + cardsPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
+                modalDeleteCallback = function() {
+                    $modalResourceDOM.remove();
+                    deleteResource(host + cardsPath + "/" + modalResource._id);
+                    $modal.modal("hide");
+                }
+                $modal_delete_btn.show();
                 $modal_title.html("Edit card");
                 $modal_name_input.val(modalResource.name);
                 $modal_desc_input.val(modalResource.description);
                 $modal.modal("show");
             });
+
+            // sortables
 
             $(".board-list-sortable").sortable({
                 items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-section, .board-list)",
@@ -561,7 +592,10 @@
 
             // initializations
             $("#board-modal-save-btn").click(function() {
-                modalCallback();
+                modalSaveCallback();
+            });
+            $("#board-modal-delete-btn").click(function() {
+                modalDeleteCallback();
             });
 
             // build context
@@ -615,7 +649,7 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" id="board-modal-delete-btn">Delete</button>
                     <button type="button" class="btn btn-primary" id="board-modal-save-btn">Save</button>
                 </div>
             </div>
