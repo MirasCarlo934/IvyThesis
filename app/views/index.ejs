@@ -98,7 +98,6 @@
             let lastOrder = -1;
             for (let i = 0; i < resourceArr.length; i++) {
                 let res = resourceArr[i];
-                console.log(res.order);
                 if (lastOrder === res.order) { // resource has been added, increment
                     res.order = res.order + 1;
                 } else if (res.order - lastOrder > 1) { // resource has been deleted, decrement
@@ -107,6 +106,30 @@
                 lastOrder = res.order;
             }
             resourceArr.sort(sortFunc);
+        }
+
+        let rearrangeChildrenBasedOnDOM = function(childrenDom) { // a function inside resource object
+            if (!this.hasOwnProperty("_id")) return; // for invalid calls to this function
+            for (let i = 0; i < childrenDom.length; i++) {
+                let $childDom = $(childrenDom[i]);
+                if ($childDom.attr("class").includes("filler")) continue; // reject filler divs
+                let childRes = getResourceFromArray(context, $childDom.attr("id").split("-")[0]);
+                let url;
+                childRes.order = i;
+                console.log(childRes.resourceType + ": " + childRes._id);
+                if (childRes.resourceType === "container") {
+                    childRes.parentId = this._id;
+                    url = host + containersPath + "/" + childRes._id;
+                } else if (childRes.resourceType === "list") {
+                    childRes.parentId = this._id;
+                    url = host + listsPath + "/" + childRes._id;
+                } else { // card
+                    url = host + cardsPath + "/" + childRes._id;
+                    childRes.listId = this._id;
+                }
+                apiPutResource(url, childRes);
+            }
+            this.children.sort(sortFunc);
         }
 
         function apiUpdateResources(resourceArr = context) {
@@ -193,43 +216,22 @@
         function addResource(resourceArr, resource) {
             resourceArr.splice(resource.order, 0, resource);
             updateResourceOrdersInArr(resourceArr);
+            apiUpdateResources();
         }
 
-        function deleteResource(resourceArr, resourceId) {
+        function recursiveDeleteResource(resourceArr, resourceId) {
             for (let i = 0; i < resourceArr.length; i++) {
                 if (resourceArr[i]._id === resourceId) {
-                    resourceArr.splice(i);
+                    resourceArr.splice(i, 1);
                     updateResourceOrdersInArr(resourceArr);
+                    apiDeleteResource(host + cardsPath + "/" + modalResource._id);
+                    apiUpdateResources();
                     return;
                 }
                 else if (resourceArr[i].hasOwnProperty("children")) {
-                    deleteResource(resourceArr[i].children, resourceId);
+                    recursiveDeleteResource(resourceArr[i].children, resourceId);
                 }
             }
-        }
-
-        let rearrangeChildrenBasedOnDOM = function(childrenDom) { // a function inside resource object
-            if (!this.hasOwnProperty("_id")) return; // for invalid calls to this function
-            for (let i = 0; i < childrenDom.length; i++) {
-                let $childDom = $(childrenDom[i]);
-                if ($childDom.attr("class").includes("filler")) continue; // reject filler divs
-                let childRes = getResourceFromArray(context, $childDom.attr("id").split("-")[0]);
-                let url;
-                childRes.order = i;
-                console.log(childRes.resourceType + ": " + childRes._id);
-                if (childRes.resourceType === "container") {
-                    childRes.parentId = this._id;
-                    url = host + containersPath + "/" + childRes._id;
-                } else if (childRes.resourceType === "list") {
-                    childRes.parentId = this._id;
-                    url = host + listsPath + "/" + childRes._id;
-                } else { // card
-                    url = host + cardsPath + "/" + childRes._id;
-                    childRes.listId = this._id;
-                }
-                apiPutResource(url, childRes);
-            }
-            this.children.sort(sortFunc);
         }
 
         function buildResourceObj(baseObj, resourceType) {
@@ -464,7 +466,7 @@
                     apiPostResource(host + cardsPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "card";
                         buildResourceDOM(data,  $listContent);
-                        addResource(getResourceFromArray(listResource._id), data);
+                        addResource(getResourceFromArray(context, listResource._id).children, data);
                         setupJquery();
                         console.log("new card added");
                     });
@@ -567,8 +569,7 @@
                 }
                 modalDeleteCallback = function() {
                     $modalResourceDOM.remove();
-                    apiDeleteResource(host + cardsPath + "/" + modalResource._id);
-                    deleteResource(context, modalResource._id);
+                    recursiveDeleteResource(context, modalResource._id);
                     $modal.modal("hide");
                 }
                 $modal_order_input.hide();
@@ -595,10 +596,12 @@
                 receive: function(event, ui) {
                     let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                     resource.updateChildren($(this).children());
+                    apiUpdateResources();
                 },
                 stop: function(event, ui) {
                     let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                     resource.updateChildren($(this).children());
+                    apiUpdateResources();
                 }
             }).disableSelection();
             // $(".board-category-sortable").sortable({
