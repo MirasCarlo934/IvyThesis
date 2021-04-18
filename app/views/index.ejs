@@ -123,23 +123,6 @@
                     }
                     newChildren.push(childRes);
                 }
-                // let $childDom = $(childrenDom[i]);
-                // if ($childDom.attr("class").includes("filler")) continue; // reject filler divs
-                // let childRes = getResourceFromArray(context, $childDom.attr("id").split("-")[0]);
-                // let url;
-                // childRes.order = i;
-                // console.log(childRes.resourceType + ": " + childRes._id);
-                // if (childRes.resourceType === "container") {
-                //     childRes.parentId = this._id;
-                //     url = host + containersPath + "/" + childRes._id;
-                // } else if (childRes.resourceType === "list") {
-                //     childRes.parentId = this._id;
-                //     url = host + listsPath + "/" + childRes._id;
-                // } else { // card
-                //     url = host + cardsPath + "/" + childRes._id;
-                //     childRes.listId = this._id;
-                // }
-                // apiPutResource(url, childRes);
             }
             newChildren.sort(sortFunc);
             this.children = newChildren;
