@@ -109,27 +109,40 @@
         }
 
         let rearrangeChildrenBasedOnDOM = function(childrenDom) { // a function inside resource object
-            if (!this.hasOwnProperty("_id")) return; // for invalid calls to this function
+            if (!this.hasOwnProperty("_id")) return; // for invalid calls to this
+            let newChildren = [];
             for (let i = 0; i < childrenDom.length; i++) {
                 let $childDom = $(childrenDom[i]);
-                if ($childDom.attr("class").includes("filler")) continue; // reject filler divs
-                let childRes = getResourceFromArray(context, $childDom.attr("id").split("-")[0]);
-                let url;
-                childRes.order = i;
-                console.log(childRes.resourceType + ": " + childRes._id);
-                if (childRes.resourceType === "container") {
-                    childRes.parentId = this._id;
-                    url = host + containersPath + "/" + childRes._id;
-                } else if (childRes.resourceType === "list") {
-                    childRes.parentId = this._id;
-                    url = host + listsPath + "/" + childRes._id;
-                } else { // card
-                    url = host + cardsPath + "/" + childRes._id;
-                    childRes.listId = this._id;
+                if (typeof $childDom.attr("id") !== typeof undefined && $childDom.attr("id") !== false) {
+                    // child dom has id attribute
+                    let childRes = getResourceFromArray(context, $childDom.attr("id").split("-")[0]);
+                    if (this.resourceType === "container") {
+                        childRes.parentId = this._id;
+                    } else { // list
+                        childRes.listId = this._id;
+                    }
+                    newChildren.push(childRes);
                 }
-                apiPutResource(url, childRes);
+                // let $childDom = $(childrenDom[i]);
+                // if ($childDom.attr("class").includes("filler")) continue; // reject filler divs
+                // let childRes = getResourceFromArray(context, $childDom.attr("id").split("-")[0]);
+                // let url;
+                // childRes.order = i;
+                // console.log(childRes.resourceType + ": " + childRes._id);
+                // if (childRes.resourceType === "container") {
+                //     childRes.parentId = this._id;
+                //     url = host + containersPath + "/" + childRes._id;
+                // } else if (childRes.resourceType === "list") {
+                //     childRes.parentId = this._id;
+                //     url = host + listsPath + "/" + childRes._id;
+                // } else { // card
+                //     url = host + cardsPath + "/" + childRes._id;
+                //     childRes.listId = this._id;
+                // }
+                // apiPutResource(url, childRes);
             }
-            this.children.sort(sortFunc);
+            newChildren.sort(sortFunc);
+            this.children = newChildren;
         }
 
         function apiUpdateResources(resourceArr = context) {
@@ -204,6 +217,12 @@
                 }
             }
             for (let i = 0; i < resourceArr.length; i++) {
+                // if (resourceArr[i] === null) {
+                //     resourceArr.splice(i, 1);
+                //     i--;
+                //     continue;
+                // }
+                // console.log(resourceArr[i]);
                 if (resourceArr[i]._id === resourceId) return resourceArr[i];
                 else if (resourceArr[i].hasOwnProperty("children")) {
                     let resource = getResourceFromArray(resourceArr[i].children, resourceId);
