@@ -454,6 +454,7 @@
             $(".board-list-add-btn").click(function() {
                 let $modal = $("#board-modal");
                 let $modal_title = $modal.find("#board-modal-title");
+                let $modal_order_div = $modal.find("#board-modal-order");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
                 let $modal_order_input = $modal.find("#board-modal-order-input");
@@ -474,7 +475,7 @@
                     });
                     $modal.modal("hide");
                 }
-                $modal_order_input.hide();
+                $modal_order_div.hide();
                 $modal_delete_btn.hide();
                 $modal_title.html("Add new card");
                 $modal_name_input.val("");
@@ -487,6 +488,7 @@
             $(".board-category-name").click(function() {
                 let $modal = $("#board-modal");
                 let $modal_title = $modal.find("#board-modal-title");
+                let $modal_order_div = $modal.find("#board-modal-order");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
                 let $modal_order_input = $modal.find("#board-modal-order-input");
@@ -500,7 +502,7 @@
                     apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
-                $modal_order_input.show();
+                $modal_order_div.show();
                 $modal_delete_btn.show();
                 $modal_title.html("Edit category");
                 $modal_name_input.val(modalResource.name);
@@ -510,6 +512,7 @@
             $(".board-section-name").click(function() {
                 let $modal = $("#board-modal");
                 let $modal_title = $modal.find("#board-modal-title");
+                let $modal_order_div = $modal.find("#board-modal-order");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
                 let $modal_order_input = $modal.find("#board-modal-order-input");
@@ -523,7 +526,7 @@
                     apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
-                $modal_order_input.show();
+                $modal_order_div.show();
                 $modal_delete_btn.show();
                 $modal_title.html("Edit section");
                 $modal_name_input.val(modalResource.name);
@@ -533,6 +536,7 @@
             $(".board-list-name").click(function() {
                 let $modal = $("#board-modal");
                 let $modal_title = $modal.find("#board-modal-title");
+                let $modal_order_div = $modal.find("#board-modal-order");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
                 let $modal_order_input = $modal.find("#board-modal-order-input");
@@ -546,7 +550,7 @@
                     apiPutResource(host + listsPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
-                $modal_order_input.show();
+                $modal_order_div.show();
                 $modal_delete_btn.show();
                 $modal_title.html("Edit list");
                 $modal_name_input.val(modalResource.name);
@@ -556,6 +560,7 @@
             $(".board-card").click(function() {
                 let $modal = $("#board-modal");
                 let $modal_title = $modal.find("#board-modal-title");
+                let $modal_order_div = $modal.find("#board-modal-order");
                 let $modal_name_input = $modal.find("#board-modal-name-input");
                 let $modal_desc_input = $modal.find("#board-modal-description-input");
                 let $modal_order_input = $modal.find("#board-modal-order-input");
@@ -574,7 +579,7 @@
                     recursiveDeleteResource(context, modalResource._id);
                     $modal.modal("hide");
                 }
-                $modal_order_input.hide();
+                $modal_order_div.hide();
                 $modal_delete_btn.show();
                 $modal_title.html("Edit card");
                 $modal_name_input.val(modalResource.name);
@@ -824,7 +829,7 @@
                             <label for="board-modal-description-input" class="col-form-label">Description:</label>
                             <textarea class="form-control" id="board-modal-description-input"></textarea>
                         </div>
-                        <div id="board-modal-description" class="mb-3">
+                        <div id="board-modal-order" class="mb-3">
                             <label for="board-modal-order-input" class="col-form-label">Position: (0 is first)</label>
                             <input type="number" class="form-control" id="board-modal-order-input"/>
                         </div>
