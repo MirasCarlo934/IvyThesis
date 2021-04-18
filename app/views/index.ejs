@@ -80,7 +80,7 @@
             else return 0;
         }
 
-        function putResource(url, data) {
+        function apiPutResource(url, data) {
             if (ENV === "production" || ENV === "testing") {
                 $.ajax({
                     url: url,
@@ -90,7 +90,7 @@
             }
         }
 
-        function postResource(url, data, successFunc) {
+        function apiPostResource(url, data, successFunc) {
             if (ENV === "production" || ENV === "testing") {
                 $.ajax({
                     url: url,
@@ -101,11 +101,47 @@
             }
         }
 
-        function deleteResource(url) {
+        function apiDeleteResource(url) {
             $.ajax({
                 url: url,
                 type: "DELETE"
             });
+        }
+
+        function getResourceFromArray(resourceArr, resourceId) {
+            for (let i = 0; i < resourceArr.length; i++) {
+                if (resourceArr[i]._id === resourceId) return resourceArr[i];
+                else if (resourceArr[i].hasOwnProperty("children")) {
+                    let resource = getResourceFromArray(resourceArr[i].children, resourceId);
+                    if (resource !== null) return resource;
+                }
+            }
+            return null;
+        }
+
+        function addResource(resourceArr, resourceParentId, resource) {
+            for (let i = 0; i < resourceArr.length; i++) {
+                if (resourceArr[i]._id === resourceParentId) {
+                    resourceArr[i].children.push(resource);
+                    resourceArr.sort(sortFunc);
+                    return;
+                }
+                else if (resourceArr[i].hasOwnProperty("children")) {
+                    addResource(resourceArr[i].children, resourceParentId, resource);
+                }
+            }
+        }
+
+        function deleteResource(resourceArr, resourceId) {
+            for (let i = 0; i < resourceArr.length; i++) {
+                if (resourceArr[i]._id === resourceId) {
+                    console.log(resourceArr.splice(i));
+                    return;
+                }
+                else if (resourceArr[i].hasOwnProperty("children")) {
+                    deleteResource(resourceArr[i].children, resourceId);
+                }
+            }
         }
 
         let rearrangeChildrenBasedOnDOM = function(childrenDom) { // a function inside resource object
@@ -127,7 +163,7 @@
                     url = host + cardsPath + "/" + childRes._id;
                     childRes.listId = this._id;
                 }
-                putResource(url, childRes);
+                apiPutResource(url, childRes);
             }
             this.children.sort(sortFunc);
         }
@@ -136,29 +172,6 @@
             baseObj.resourceType = resourceType;
             baseObj.updateChildren = rearrangeChildrenBasedOnDOM;
             return baseObj;
-        }
-
-        function getResourceFromArray(resourceArr, resourceId) {
-            for (let i = 0; i < resourceArr.length; i++) {
-                if (resourceArr[i]._id === resourceId) return resourceArr[i];
-                else if (resourceArr[i].hasOwnProperty("children")) {
-                    let resource = getResourceFromArray(resourceArr[i].children, resourceId);
-                    if (resource !== null) return resource;
-                }
-            }
-            return null;
-        }
-
-        function addResource(resourceArr, resourceParentId, resource) {
-            for (let i = 0; i < resourceArr.length; i++) {
-                if (resourceArr[i]._id === resourceParentId) {
-                    resourceArr[i].children.push(resource);
-                    resourceArr.sort(sortFunc);
-                }
-                else if (resourceArr[i].hasOwnProperty("children")) {
-                    addResource(resourceArr[i].children, resourceParentId, resource);
-                }
-            }
         }
 
         function buildListResource(list) {
@@ -224,7 +237,7 @@
                     let $listContent = $("#" + listResource._id + "-content");
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
-                    postResource(host + cardsPath, modalResource, function(data) { // callback after post success
+                    apiPostResource(host + cardsPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "card";
                         buildResourceDOM(data,  $listContent);
                         addResource(context, listResource._id, data);
@@ -254,7 +267,7 @@
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
-                    putResource(host + containersPath + "/" + modalResource._id, modalResource);
+                    apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
                 $modal_delete_btn.show();
@@ -275,7 +288,7 @@
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
-                    putResource(host + containersPath + "/" + modalResource._id, modalResource);
+                    apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
                 $modal_delete_btn.show();
@@ -296,7 +309,7 @@
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
-                    putResource(host + listsPath + "/" + modalResource._id, modalResource);
+                    apiPutResource(host + listsPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
                 $modal_delete_btn.show();
@@ -317,12 +330,13 @@
                     modalResource.name = $modal_name_input.val();
                     modalResource.description = $modal_desc_input.val();
                     $modalResourceDOM.find(".card-body").html(modalResource.name);
-                    putResource(host + cardsPath + "/" + modalResource._id, modalResource);
+                    apiPutResource(host + cardsPath + "/" + modalResource._id, modalResource);
                     $modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
                     $modalResourceDOM.remove();
-                    deleteResource(host + cardsPath + "/" + modalResource._id);
+                    apiDeleteResource(host + cardsPath + "/" + modalResource._id);
+                    deleteResource(context, modalResource._id);
                     $modal.modal("hide");
                 }
                 $modal_delete_btn.show();
