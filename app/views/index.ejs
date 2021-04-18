@@ -122,7 +122,10 @@
                         url = url + cardsPath;
                     }
                     url = url + "/" + res._id;
-                    return $.ajax({
+                    if (res.hasOwnProperty("children")) {
+                        apiUpdateResources(res.children);
+                    }
+                    $.ajax({
                         url: url,
                         type: "PUT",
                         data: res
