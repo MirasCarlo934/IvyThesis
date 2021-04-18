@@ -221,17 +221,27 @@
             apiUpdateResources();
         }
 
-        function recursiveDeleteResource(resourceArr, resourceId) {
-            for (let i = 0; i < resourceArr.length; i++) {
-                if (resourceArr[i]._id === resourceId) {
-                    resourceArr.splice(i, 1);
-                    updateResourceOrdersInArr(resourceArr);
+        function recursiveDeleteResource(resourceArr, resourceId = null) {
+            if (resourceId === null) {
+                for (let i = 0; i < resourceArr.length; i++) {
+                    if (resourceArr[i].hasOwnProperty("children")) {
+                        recursiveDeleteResource(resourceArr[i].children);
+                    }
                     apiDeleteResource(host + cardsPath + "/" + modalResource._id);
-                    apiUpdateResources();
-                    return;
                 }
-                else if (resourceArr[i].hasOwnProperty("children")) {
-                    recursiveDeleteResource(resourceArr[i].children, resourceId);
+                resourceArr = [];
+            } else {
+                for (let i = 0; i < resourceArr.length; i++) {
+                    if (resourceArr[i]._id === resourceId) {
+                        resourceArr.splice(i, 1);
+                        updateResourceOrdersInArr(resourceArr);
+                        apiDeleteResource(host + cardsPath + "/" + modalResource._id);
+                        apiUpdateResources();
+                        return;
+                    }
+                    else if (resourceArr[i].hasOwnProperty("children")) {
+                        recursiveDeleteResource(resourceArr[i].children, resourceId);
+                    }
                 }
             }
         }
