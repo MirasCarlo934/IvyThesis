@@ -360,14 +360,12 @@
                 placeholder: "card-placeholder mb-3",
                 forcePlaceholderSize: true,
                 receive: function(event, ui) {
-                    // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                    // console.log(resource.name + " received ui");
-                    // resource.updateChildren($(this).children());
+                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                    resource.updateChildren($(this).children());
                 },
                 stop: function(event, ui) {
-                    // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-                    // console.log(resource.name + " stopped sorting");
-                    // resource.updateChildren($(this).children());
+                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                    resource.updateChildren($(this).children());
                 }
             }).disableSelection();
             // $(".board-category-sortable").sortable({
