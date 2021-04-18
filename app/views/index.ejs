@@ -149,6 +149,18 @@
             return null;
         }
 
+        function addResource(resourceArr, resourceParentId, resource) {
+            for (let i = 0; i < resourceArr.length; i++) {
+                if (resourceArr[i]._id === resourceParentId) {
+                    resourceArr[i].children.push(resource);
+                    resourceArr.sort(sortFunc);
+                }
+                else if (resourceArr[i].hasOwnProperty("children")) {
+                    addResource(resourceArr[i].children, resourceParentId, resource);
+                }
+            }
+        }
+
         function buildListResource(list) {
             totalResources++;
             list.children = [];
@@ -215,6 +227,8 @@
                     postResource(host + cardsPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "card";
                         buildResourceDOM(data,  $listContent);
+                        addResource(context, listResource._id, data);
+                        setupJquery();
                         console.log("new card added");
                     });
                     $modal.modal("hide");
