@@ -158,20 +158,38 @@
             if (resourceType === "section") {
                 for (let i = 0; i < array.length; i++) {
                     let resource = array[i];
-                    let tree = container_tree + " > " + resource.name;
+                    let tree = container_tree + " -> " + resource.name;
                     if (resource.resourceType === "category") {
                         output_arr.push({
                             container_tree: tree,
                             container_id: resource._id
                         });
-                        console.log(output_arr);
                     }
                     if (resource.hasOwnProperty("children")) {
                         getAvailableParentContainers(resourceType, tree, resource.children, output_arr);
                     }
                 }
             } else { // list
-
+                output_arr.push({
+                    container_tree: container_tree,
+                    container_id: "board"
+                });
+                for (let i = 0; i < array.length; i++) {
+                    let resource = array[i];
+                    let tree = container_tree;
+                    if (resource.hasOwnProperty("name") && resource.name !== "" && resource.name !== undefined) {
+                        tree =  container_tree + " -> " + resource.name;
+                    }
+                    if (resource.resourceType === "category" || resource.resourceType === "section") {
+                        output_arr.push({
+                            container_tree: tree,
+                            container_id: resource._id
+                        });
+                    }
+                    if (resource.hasOwnProperty("children")) {
+                        getAvailableParentContainers(resourceType, tree, resource.children, output_arr);
+                    }
+                }
             }
             return output_arr;
         }
@@ -802,23 +820,23 @@
                 let availableParents = getAvailableParentContainers("section")
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
-                    console.log("adding new category");
-                    let parent = getResourceFromArray(context, "board");
-                    let order = parseInt(Modal.order_input.val());
-                    if (order > parent.children.length + 1) {
-                        order = parent.children.length + 1;
-                    }
+                    console.log("adding new section");
+                    // let parent = getResourceFromArray(context, "board");
+                    // let order = parseInt(Modal.order_input.val());
+                    // if (order > parent.children.length + 1) {
+                    //     order = parent.children.length + 1;
+                    // }
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
                     modalResource.order = order;
                     apiPostResource(host + containersPath, modalResource, function(data) { // callback after post success
-                        data.resourceType = "category";
+                        data.resourceType = "section";
                         data.children = [];
                         addResourceToArray(context, data);
                         buildDOM(true);
                         setupJquery();
                         apiUpdateResources();
-                        console.log("new category added");
+                        console.log("new section added");
                     });
                     Modal.modal.modal("hide");
                 }
@@ -836,7 +854,50 @@
                 Modal.parent_div.show();
                 Modal.order_input.show();
                 Modal.delete_btn.hide();
-                Modal.title.html("Add new category");
+                Modal.title.html("Add new section");
+                Modal.name_input.val("");
+                Modal.desc_input.val("");
+                Modal.modal.modal("show");
+            });
+            $("#board-menu-add-list").click(function() {
+                let availableParents = getAvailableParentContainers("list")
+                modalResource = CategoryPostJson("noname", "nodesc", 0);
+                modalSaveCallback = function() { // modal callback
+                    console.log("adding new list");
+                    // let parent = getResourceFromArray(context, "board");
+                    // let order = parseInt(Modal.order_input.val());
+                    // if (order > parent.children.length + 1) {
+                    //     order = parent.children.length + 1;
+                    // }
+                    modalResource.name = Modal.name_input.val();
+                    modalResource.description = Modal.desc_input.val();
+                    modalResource.order = order;
+                    apiPostResource(host + containersPath, modalResource, function(data) { // callback after post success
+                        data.resourceType = "list";
+                        data.children = [];
+                        addResourceToArray(context, data);
+                        buildDOM(true);
+                        setupJquery();
+                        apiUpdateResources();
+                        console.log("new list added");
+                    });
+                    Modal.modal.modal("hide");
+                }
+                // build parent dropdowns
+                let parent_dropdown_html = "";
+                for (let i = 0; i < availableParents.length; i++) {
+                    let parent = availableParents[i];
+                    parent_dropdown_html += "<li><button class='dropdown-item'>" + parent.container_tree + "</button></li>";
+                }
+                Modal.order_input.attr({
+                    "min": 0,
+                    "max": context.length
+                });
+                Modal.parent_menu.html(parent_dropdown_html);
+                Modal.parent_div.show();
+                Modal.order_input.show();
+                Modal.delete_btn.hide();
+                Modal.title.html("Add new list");
                 Modal.name_input.val("");
                 Modal.desc_input.val("");
                 Modal.modal.modal("show");
