@@ -186,10 +186,12 @@
                     }
                 }
             } else { // list
-                output_arr.push({
-                    container_tree: container_tree,
-                    container_id: "board"
-                });
+                if (output_arr.length <= 0) {
+                    output_arr.push({
+                        container_tree: container_tree,
+                        container_id: "board"
+                    });
+                }
                 for (let i = 0; i < array.length; i++) {
                     let resource = array[i];
                     let tree = container_tree;
@@ -197,6 +199,7 @@
                         tree =  container_tree + " -> " + resource.name;
                     }
                     if (resource.resourceType === "category" || resource.resourceType === "section") {
+                        console.log(resource);
                         output_arr.push({
                             container_tree: tree,
                             container_id: resource._id
@@ -816,10 +819,10 @@
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new list");
-                    let parent = getResourceFromArray(context, "board");
+                    let parentRes = getResourceFromArray(context, modalParentContainerID);
                     let order = parseInt(Modal.order_input.val());
-                    if (order > parent.children.length + 1) {
-                        order = parent.children.length + 1;
+                    if (order > parentRes.children.length + 1) {
+                        order = parentRes.children.length + 1;
                     }
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
@@ -827,7 +830,7 @@
                     apiPostResource(host + containersPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "list";
                         data.children = [];
-                        addResourceToArray(context, data);
+                        addResourceToArray(parentRes.children, data);
                         buildDOM(true);
                         setupJquery();
                         apiUpdateResources();
