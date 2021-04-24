@@ -167,8 +167,15 @@
             if (resourceType === "section") {
                 for (let i = 0; i < array.length; i++) {
                     let resource = array[i];
-                    let tree = container_tree + " -> " + resource.name;
+                    let tree = container_tree;
                     if (resource.resourceType === "category") {
+                        tree += " -> " + resource.name;
+                        output_arr.push({
+                            container_tree: tree,
+                            container_id: resource._id
+                        });
+                    } else if (resource.resourceType === "container") {
+                        tree += " -> column " + (resource.order+1);
                         output_arr.push({
                             container_tree: tree,
                             container_id: resource._id
