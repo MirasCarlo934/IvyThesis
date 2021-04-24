@@ -4,6 +4,13 @@
 <head>
     <title/>IvyThesis</title>
     <style>
+        html {
+            background: url(img/background.jpg) no-repeat center center fixed;
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            -o-background-size: cover;
+            background-size: cover;
+        }
         div.main {
             border: 3px solid black;
         }
@@ -67,6 +74,8 @@
         let modalSaveCallback; // the callback function to be called by the modal save button
         let modalDeleteCallback; // the callback function to be called by the modal delete button
 
+        let OBJECTS;
+
         let CardPostJson = function(name, description, listId, order) {
             return {
                 "name": name,
@@ -86,6 +95,19 @@
                 "parentId": "board"
             }
         }
+
+        let Modal = {
+            modal: $("#board-modal"),
+            title: $("#board-modal").find("#board-modal-title"),
+            order_div: $("#board-modal").find("#board-modal-order"),
+            order_input: $("#board-modal").find("#board-modal-order-input"),
+            name_input: $("#board-modal").find("#board-modal-name-input"),
+            desc_input: $("#board-modal").find("#board-modal-description-input"),
+            parent_div: $("#board-modal").find("#board-modal-parent"),
+            delete_btn: $("#board-modal").find("#board-modal-delete-btn")
+        }
+
+        let UTILITIES;
 
         let sortFunc = function(a,b) {
             if (a.order < b.order) return -1;
@@ -108,11 +130,11 @@
             resourceArr.sort(sortFunc);
         }
 
-        let rearrangeChildrenBasedOnDOM = function(childrenDom) { // a function inside resource object
+        let rearrangeChildrenResourcesBasedOnDOM = function($childrenDom) { // a function inside resource object
             if (!this.hasOwnProperty("_id")) return; // for invalid calls to this
             let newChildren = [];
-            for (let i = 0; i < childrenDom.length; i++) {
-                let $childDom = $(childrenDom[i]);
+            for (let i = 0; i < $childrenDom.length; i++) {
+                let $childDom = $($childrenDom[i]);
                 if (typeof $childDom.attr("id") !== typeof undefined && $childDom.attr("id") !== false) {
                     // child dom has id attribute
                     let childRes = getResourceFromArray(context, $childDom.attr("id").split("-")[0]);
@@ -127,6 +149,8 @@
             newChildren.sort(sortFunc);
             this.children = newChildren;
         }
+
+        let API;
 
         function apiUpdateResources(resourceArr = context) {
             if (ENV === "production" || ENV === "testing") {
@@ -193,62 +217,11 @@
             }
         }
 
-        function getResourceFromArray(resourceArr, resourceId) {
-            if (resourceId === "board") {
-                return {
-                    children: context
-                }
-            }
-            for (let i = 0; i < resourceArr.length; i++) {
-                // if (resourceArr[i] === null) {
-                //     resourceArr.splice(i, 1);
-                //     i--;
-                //     continue;
-                // }
-                // console.log(resourceArr[i]);
-                if (resourceArr[i]._id === resourceId) return resourceArr[i];
-                else if (resourceArr[i].hasOwnProperty("children")) {
-                    let resource = getResourceFromArray(resourceArr[i].children, resourceId);
-                    if (resource !== null) return resource;
-                }
-            }
-            return null;
-        }
-
-        function addResource(resourceArr, resource) {
-            resourceArr.splice(resource.order, 0, resource);
-            updateResourceOrdersInArr(resourceArr);
-            apiUpdateResources();
-        }
-
-        function recursiveDeleteResource(resourceArr, resourceId = null) {
-            if (resourceId === null) {
-                for (let i = 0; i < resourceArr.length; i++) {
-                    if (resourceArr[i].hasOwnProperty("children")) {
-                        recursiveDeleteResource(resourceArr[i].children);
-                    }
-                    apiDeleteResource(host + cardsPath + "/" + modalResource._id);
-                }
-                resourceArr = [];
-            } else {
-                for (let i = 0; i < resourceArr.length; i++) {
-                    if (resourceArr[i]._id === resourceId) {
-                        resourceArr.splice(i, 1);
-                        updateResourceOrdersInArr(resourceArr);
-                        apiDeleteResource(host + cardsPath + "/" + modalResource._id);
-                        apiUpdateResources();
-                        return;
-                    }
-                    else if (resourceArr[i].hasOwnProperty("children")) {
-                        recursiveDeleteResource(resourceArr[i].children, resourceId);
-                    }
-                }
-            }
-        }
+        let RESOURCE_MANAGEMENT;
 
         function buildResourceObj(baseObj, resourceType) {
             baseObj.resourceType = resourceType;
-            baseObj.updateChildren = rearrangeChildrenBasedOnDOM;
+            baseObj.updateChildren = rearrangeChildrenResourcesBasedOnDOM;
             return baseObj;
         }
 
@@ -298,6 +271,61 @@
             });
         }
 
+        function getResourceFromArray(resourceArr, resourceId) {
+            if (resourceId === "board") {
+                return {
+                    children: context
+                }
+            }
+            for (let i = 0; i < resourceArr.length; i++) {
+                // if (resourceArr[i] === null) {
+                //     resourceArr.splice(i, 1);
+                //     i--;
+                //     continue;
+                // }
+                // console.log(resourceArr[i]);
+                if (resourceArr[i]._id === resourceId) return resourceArr[i];
+                else if (resourceArr[i].hasOwnProperty("children")) {
+                    let resource = getResourceFromArray(resourceArr[i].children, resourceId);
+                    if (resource !== null) return resource;
+                }
+            }
+            return null;
+        }
+
+        function addResourceToArray(resourceArr, resource) {
+            resourceArr.splice(resource.order, 0, resource);
+            updateResourceOrdersInArr(resourceArr);
+            apiUpdateResources();
+        }
+
+        function recursiveDeleteResource(resourceArr, resourceId = null) {
+            if (resourceId === null) {
+                for (let i = 0; i < resourceArr.length; i++) {
+                    if (resourceArr[i].hasOwnProperty("children")) {
+                        recursiveDeleteResource(resourceArr[i].children);
+                    }
+                    apiDeleteResource(host + cardsPath + "/" + modalResource._id);
+                }
+                resourceArr = [];
+            } else {
+                for (let i = 0; i < resourceArr.length; i++) {
+                    if (resourceArr[i]._id === resourceId) {
+                        resourceArr.splice(i, 1);
+                        updateResourceOrdersInArr(resourceArr);
+                        apiDeleteResource(host + cardsPath + "/" + modalResource._id);
+                        apiUpdateResources();
+                        return;
+                    }
+                    else if (resourceArr[i].hasOwnProperty("children")) {
+                        recursiveDeleteResource(resourceArr[i].children, resourceId);
+                    }
+                }
+            }
+        }
+
+        let DOM_MANAGEMENT;
+
         /**
           * A one-time-call function after all the resources are retrieved at init
           */
@@ -311,11 +339,6 @@
                 for (let i = 0; i < context.length; i++) {
                     $last = buildResourceDOM(context[i], $board_content, "x", 0);
                 }
-                // remove margin of last child
-                // if (context.length > 0) {
-                //     let last_class = $last.attr("class").split(" ").pop();
-                //     $last.removeClass(last_class);
-                // }
             }
             setupJquery();
         }
@@ -462,139 +485,109 @@
             // "add" modal configurations
 
             $(".board-list-add-btn").click(function() {
-                let $modal = $("#board-modal");
-                let $modal_title = $modal.find("#board-modal-title");
-                let $modal_order_div = $modal.find("#board-modal-order");
-                let $modal_name_input = $modal.find("#board-modal-name-input");
-                let $modal_desc_input = $modal.find("#board-modal-description-input");
-                let $modal_order_input = $modal.find("#board-modal-order-input");
-                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 let listResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 modalResource = CardPostJson("noname", "nodesc", listResource._id, listResource.children.length);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new card");
                     let $listContent = $("#" + listResource._id + "-content");
-                    modalResource.name = $modal_name_input.val();
-                    modalResource.description = $modal_desc_input.val();
+                    modalResource.name = Modal.name_input.val();
+                    modalResource.description = Modal.desc_input.val();
                     apiPostResource(host + cardsPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "card";
                         buildResourceDOM(data,  $listContent);
-                        addResource(getResourceFromArray(context, listResource._id).children, data);
+                        addResourceToArray(getResourceFromArray(context, listResource._id).children, data);
                         setupJquery();
                         console.log("new card added");
                     });
-                    $modal.modal("hide");
+                    Modal.modal.modal("hide");
                 }
-                $modal_order_div.hide();
-                $modal_delete_btn.hide();
-                $modal_title.html("Add new card");
-                $modal_name_input.val("");
-                $modal_desc_input.val("");
-                $modal.modal("show");
+                Modal.parent_div.hide();
+                Modal.order_div.hide();
+                Modal.delete_btn.hide();
+                Modal.title.html("Add new card");
+                Modal.name_input.val("");
+                Modal.desc_input.val("");
+                Modal.modal.modal("show");
             })
 
             // "edit" modal configurations
 
             $(".board-category-name").click(function() {
-                let $modal = $("#board-modal");
-                let $modal_title = $modal.find("#board-modal-title");
-                let $modal_order_div = $modal.find("#board-modal-order");
-                let $modal_name_input = $modal.find("#board-modal-name-input");
-                let $modal_desc_input = $modal.find("#board-modal-description-input");
-                let $modal_order_input = $modal.find("#board-modal-order-input");
-                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
-                    modalResource.name = $modal_name_input.val();
-                    modalResource.description = $modal_desc_input.val();
+                    modalResource.name = Modal.name_input.val();
+                    modalResource.description = Modal.desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
                     apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
-                    $modal.modal("hide");
+                    Modal.modal.modal("hide");
                 }
-                $modal_order_div.show();
-                $modal_delete_btn.show();
-                $modal_title.html("Edit category");
-                $modal_name_input.val(modalResource.name);
-                $modal_desc_input.val(modalResource.description);
-                $modal.modal("show");
+                Modal.parent_div.show();
+                Modal.order_div.show();
+                Modal.delete_btn.show();
+                Modal.title.html("Edit category");
+                Modal.name_input.val(modalResource.name);
+                Modal.desc_input.val(modalResource.description);
+                Modal.modal.modal("show");
             });
             $(".board-section-name").click(function() {
-                let $modal = $("#board-modal");
-                let $modal_title = $modal.find("#board-modal-title");
-                let $modal_order_div = $modal.find("#board-modal-order");
-                let $modal_name_input = $modal.find("#board-modal-name-input");
-                let $modal_desc_input = $modal.find("#board-modal-description-input");
-                let $modal_order_input = $modal.find("#board-modal-order-input");
-                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
-                    modalResource.name = $modal_name_input.val();
-                    modalResource.description = $modal_desc_input.val();
+                    modalResource.name = Modal.name_input.val();
+                    modalResource.description = Modal.desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
                     apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
-                    $modal.modal("hide");
+                    Modal.modal.modal("hide");
                 }
-                $modal_order_div.show();
-                $modal_delete_btn.show();
-                $modal_title.html("Edit section");
-                $modal_name_input.val(modalResource.name);
-                $modal_desc_input.val(modalResource.description);
-                $modal.modal("show");
+                Modal.parent_div.show();
+                Modal.order_div.show();
+                Modal.delete_btn.show();
+                Modal.title.html("Edit section");
+                Modal.name_input.val(modalResource.name);
+                Modal.desc_input.val(modalResource.description);
+                Modal.modal.modal("show");
             });
             $(".board-list-name").click(function() {
-                let $modal = $("#board-modal");
-                let $modal_title = $modal.find("#board-modal-title");
-                let $modal_order_div = $modal.find("#board-modal-order");
-                let $modal_name_input = $modal.find("#board-modal-name-input");
-                let $modal_desc_input = $modal.find("#board-modal-description-input");
-                let $modal_order_input = $modal.find("#board-modal-order-input");
-                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
-                    modalResource.name = $modal_name_input.val();
-                    modalResource.description = $modal_desc_input.val();
+                    modalResource.name = Modal.name_input.val();
+                    modalResource.description = Modal.desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
                     apiPutResource(host + listsPath + "/" + modalResource._id, modalResource);
-                    $modal.modal("hide");
+                    Modal.modal.modal("hide");
                 }
-                $modal_order_div.show();
-                $modal_delete_btn.show();
-                $modal_title.html("Edit list");
-                $modal_name_input.val(modalResource.name);
-                $modal_desc_input.val(modalResource.description);
-                $modal.modal("show");
+                Modal.parent_div.show();
+                Modal.order_div.show();
+                Modal.delete_btn.show();
+                Modal.title.html("Edit list");
+                Modal.name_input.val(modalResource.name);
+                Modal.desc_input.val(modalResource.description);
+                Modal.modal.modal("show");
             });
             $(".board-card").click(function() {
-                let $modal = $("#board-modal");
-                let $modal_title = $modal.find("#board-modal-title");
-                let $modal_order_div = $modal.find("#board-modal-order");
-                let $modal_name_input = $modal.find("#board-modal-name-input");
-                let $modal_desc_input = $modal.find("#board-modal-description-input");
-                let $modal_order_input = $modal.find("#board-modal-order-input");
-                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this);
                 modalSaveCallback = function() {
-                    modalResource.name = $modal_name_input.val();
-                    modalResource.description = $modal_desc_input.val();
+                    modalResource.name = Modal.name_input.val();
+                    modalResource.description = Modal.desc_input.val();
                     $modalResourceDOM.find(".card-body").html(modalResource.name);
                     apiPutResource(host + cardsPath + "/" + modalResource._id, modalResource);
-                    $modal.modal("hide");
+                    Modal.modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
                     $modalResourceDOM.remove();
                     recursiveDeleteResource(context, modalResource._id);
-                    $modal.modal("hide");
+                    Modal.modal.modal("hide");
                 }
-                $modal_order_div.hide();
-                $modal_delete_btn.show();
-                $modal_title.html("Edit card");
-                $modal_name_input.val(modalResource.name);
-                $modal_desc_input.val(modalResource.description);
-                $modal.modal("show");
+                Modal.parent_div.show();
+                Modal.order_div.show();
+                Modal.delete_btn.show();
+                Modal.title.html("Edit card");
+                Modal.name_input.val(modalResource.name);
+                Modal.desc_input.val(modalResource.description);
+                Modal.modal.modal("show");
             });
 
             // sortables
@@ -724,6 +717,16 @@
         $(function() {
 
             // initializations
+            Modal = {
+                modal: $("#board-modal"),
+                title: $("#board-modal").find("#board-modal-title"),
+                order_div: $("#board-modal").find("#board-modal-order"),
+                order_input: $("#board-modal").find("#board-modal-order-input"),
+                name_input: $("#board-modal").find("#board-modal-name-input"),
+                desc_input: $("#board-modal").find("#board-modal-description-input"),
+                parent_div: $("#board-modal").find("#board-modal-parent"),
+                delete_btn: $("#board-modal").find("#board-modal-delete-btn")
+            }
             $("#board-menu-items").hide();
             $("#board-modal-save-btn").click(function() {
                 modalSaveCallback();
@@ -760,7 +763,7 @@
                     apiPostResource(host + containersPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "category";
                         data.children = [];
-                        addResource(context, data);
+                        addResourceToArray(context, data);
                         buildDOM(true);
                         setupJquery();
                         apiUpdateResources();
@@ -805,8 +808,9 @@
     </script>
 </head>
 
-<body>
+<!--<body style="background-image: url('<%=api.host%>/img/background.jpg')">-->
 <!--    <img src="img/testimg.png" alt="Test"/>-->
+<body>
 <div class="layout-body container-fluid">
 
     <div id="board-menu" class="position-fixed bottom-0 end-0 p-4">
@@ -838,6 +842,18 @@
                         <div id="board-modal-description" class="mb-3">
                             <label for="board-modal-description-input" class="col-form-label">Description:</label>
                             <textarea class="form-control" id="board-modal-description-input"></textarea>
+                        </div>
+                        <div id="board-modal-parent">
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Dropdown button
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                    <li><button class="dropdown-item">Action</button></li>
+                                    <li><button class="dropdown-item">Another action</button></li>
+                                    <li><button class="dropdown-item">Something else here</button></li>
+                                </ul>
+                            </div>
                         </div>
                         <div id="board-modal-order" class="mb-3">
                             <label for="board-modal-order-input" class="col-form-label">Position: (0 is first)</label>
