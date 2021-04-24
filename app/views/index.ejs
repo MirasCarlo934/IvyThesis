@@ -104,6 +104,7 @@
             name_input: $("#board-modal").find("#board-modal-name-input"),
             desc_input: $("#board-modal").find("#board-modal-description-input"),
             parent_div: $("#board-modal").find("#board-modal-parent"),
+            parent_menu: $("#board-modal").find("#board-modal-parent-menu"),
             delete_btn: $("#board-modal").find("#board-modal-delete-btn")
         }
 
@@ -148,6 +149,31 @@
             }
             newChildren.sort(sortFunc);
             this.children = newChildren;
+        }
+
+        /**
+         * Returns an array of available parent containers for the specified resource type
+         */
+        let getAvailableParentContainers = function(resourceType, container_tree = "board", array = context, output_arr = []) {
+            if (resourceType === "section") {
+                for (let i = 0; i < array.length; i++) {
+                    let resource = array[i];
+                    let tree = container_tree + " > " + resource.name;
+                    if (resource.resourceType === "category") {
+                        output_arr.push({
+                            container_tree: tree,
+                            container_id: resource._id
+                        });
+                        console.log(output_arr);
+                    }
+                    if (resource.hasOwnProperty("children")) {
+                        getAvailableParentContainers(resourceType, tree, resource.children, output_arr);
+                    }
+                }
+            } else { // list
+
+            }
+            return output_arr;
         }
 
         let API;
@@ -278,12 +304,6 @@
                 }
             }
             for (let i = 0; i < resourceArr.length; i++) {
-                // if (resourceArr[i] === null) {
-                //     resourceArr.splice(i, 1);
-                //     i--;
-                //     continue;
-                // }
-                // console.log(resourceArr[i]);
                 if (resourceArr[i]._id === resourceId) return resourceArr[i];
                 else if (resourceArr[i].hasOwnProperty("children")) {
                     let resource = getResourceFromArray(resourceArr[i].children, resourceId);
@@ -725,6 +745,7 @@
                 name_input: $("#board-modal").find("#board-modal-name-input"),
                 desc_input: $("#board-modal").find("#board-modal-description-input"),
                 parent_div: $("#board-modal").find("#board-modal-parent"),
+                parent_menu: $("#board-modal").find("#board-modal-parent-menu"),
                 delete_btn: $("#board-modal").find("#board-modal-delete-btn")
             }
             $("#board-menu-items").hide();
@@ -743,22 +764,16 @@
                 menuOpen = !menuOpen;
             });
             $("#board-menu-add-category").click(function() {
-                let $modal = $("#board-modal");
-                let $modal_title = $modal.find("#board-modal-title");
-                let $modal_name_input = $modal.find("#board-modal-name-input");
-                let $modal_desc_input = $modal.find("#board-modal-description-input");
-                let $modal_order_input = $modal.find("#board-modal-order-input");
-                let $modal_delete_btn = $modal.find("#board-modal-delete-btn");
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new category");
                     let parent = getResourceFromArray(context, "board");
-                    let order = parseInt($modal_order_input.val());
+                    let order = parseInt(Modal.order_input.val());
                     if (order > parent.children.length + 1) {
                         order = parent.children.length + 1;
                     }
-                    modalResource.name = $modal_name_input.val();
-                    modalResource.description = $modal_desc_input.val();
+                    modalResource.name = Modal.name_input.val();
+                    modalResource.description = Modal.desc_input.val();
                     modalResource.order = order;
                     apiPostResource(host + containersPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "category";
@@ -769,18 +784,62 @@
                         apiUpdateResources();
                         console.log("new category added");
                     });
-                    $modal.modal("hide");
+                    Modal.modal.modal("hide");
                 }
-                $modal_order_input.attr({
+                Modal.order_input.attr({
                     "min": 0,
                     "max": context.length
                 });
-                $modal_order_input.show();
-                $modal_delete_btn.hide();
-                $modal_title.html("Add new category");
-                $modal_name_input.val("");
-                $modal_desc_input.val("");
-                $modal.modal("show");
+                Modal.parent_div.show();
+                Modal.order_input.show();
+                Modal.delete_btn.hide();
+                Modal.title.html("Add new category");
+                Modal.name_input.val("");
+                Modal.desc_input.val("");
+                Modal.modal.modal("show");
+            });
+            $("#board-menu-add-section").click(function() {
+                let availableParents = getAvailableParentContainers("section")
+                modalResource = CategoryPostJson("noname", "nodesc", 0);
+                modalSaveCallback = function() { // modal callback
+                    console.log("adding new category");
+                    let parent = getResourceFromArray(context, "board");
+                    let order = parseInt(Modal.order_input.val());
+                    if (order > parent.children.length + 1) {
+                        order = parent.children.length + 1;
+                    }
+                    modalResource.name = Modal.name_input.val();
+                    modalResource.description = Modal.desc_input.val();
+                    modalResource.order = order;
+                    apiPostResource(host + containersPath, modalResource, function(data) { // callback after post success
+                        data.resourceType = "category";
+                        data.children = [];
+                        addResourceToArray(context, data);
+                        buildDOM(true);
+                        setupJquery();
+                        apiUpdateResources();
+                        console.log("new category added");
+                    });
+                    Modal.modal.modal("hide");
+                }
+                // build parent dropdowns
+                let parent_dropdown_html = "";
+                for (let i = 0; i < availableParents.length; i++) {
+                    let parent = availableParents[i];
+                    parent_dropdown_html += "<li><button class='dropdown-item'>" + parent.container_tree + "</button></li>";
+                }
+                Modal.order_input.attr({
+                    "min": 0,
+                    "max": context.length
+                });
+                Modal.parent_menu.html(parent_dropdown_html);
+                Modal.parent_div.show();
+                Modal.order_input.show();
+                Modal.delete_btn.hide();
+                Modal.title.html("Add new category");
+                Modal.name_input.val("");
+                Modal.desc_input.val("");
+                Modal.modal.modal("show");
             });
 
             // build context
@@ -843,12 +902,13 @@
                             <label for="board-modal-description-input" class="col-form-label">Description:</label>
                             <textarea class="form-control" id="board-modal-description-input"></textarea>
                         </div>
-                        <div id="board-modal-parent">
+                        <div id="board-modal-parent" class="mb-3">
+                            <label class="col-form-label">Parent Container</label>
                             <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Dropdown button
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="board-modal-parent-dropdown-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Choose
                                 </button>
-                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <ul id="board-modal-parent-menu" class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                     <li><button class="dropdown-item">Action</button></li>
                                     <li><button class="dropdown-item">Another action</button></li>
                                     <li><button class="dropdown-item">Something else here</button></li>
