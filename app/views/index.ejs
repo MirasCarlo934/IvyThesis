@@ -71,8 +71,17 @@
 
         let modalResource; // the current resource being modified by modal
         let $modalResourceDOM; // the current resource DOM being modified by modal
-        let modalSaveCallback; // the callback function to be called by the modal save button
-        let modalDeleteCallback; // the callback function to be called by the modal delete button
+        let modalParentContainerID; // the ID of the current parent container chosen
+        let modalSaveCallback = function(){}; // the callback function to be called by the modal save button
+        let modalDeleteCallback = function(){}; // the callback function to be called by the modal delete button
+        let modalParentChosenCallback = function() { // the callback function to be called when parent has been chosen from select
+            modalParentContainerID = Modal.parent_menu.find("option:selected").val();
+            let parentRes = getResourceFromArray(context, modalParentContainerID);
+            Modal.order_input.attr({
+                "min": 0,
+                "max": parentRes.children.length
+            });
+        };
 
         let OBJECTS;
 
@@ -194,6 +203,12 @@
             return output_arr;
         }
 
+        let CALLBACKS;
+
+        function setModalParentContainer() {
+
+        }
+
         let API;
 
         function apiUpdateResources(resourceArr = context) {
@@ -266,7 +281,18 @@
         function buildResourceObj(baseObj, resourceType) {
             baseObj.resourceType = resourceType;
             baseObj.updateChildren = rearrangeChildrenResourcesBasedOnDOM;
+            if (resourceType !== "card") {
+                baseObj.children = [];
+            }
             return baseObj;
+        }
+
+        function buildNewContainerResource(parentId, order) {
+            return {
+                "orientation": "y",
+                "parentId": parentId,
+                "order": order
+            }
         }
 
         function buildListResource(list) {
@@ -334,6 +360,8 @@
         function addResourceToArray(resourceArr, resource) {
             resourceArr.splice(resource.order, 0, resource);
             updateResourceOrdersInArr(resourceArr);
+            buildDOM(true);
+            setupJquery();
             apiUpdateResources();
         }
 
@@ -619,8 +647,8 @@
                     recursiveDeleteResource(context, modalResource._id);
                     Modal.modal.modal("hide");
                 }
-                Modal.parent_div.show();
-                Modal.order_div.show();
+                Modal.parent_div.hide();
+                Modal.order_div.hide();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit card");
                 Modal.name_input.val(modalResource.name);
@@ -652,105 +680,9 @@
                     apiUpdateResources();
                 }
             }).disableSelection();
-            // $(".board-category-sortable").sortable({
-            //     items: "div:not(.ui-state-disabled, .board-category)",
-            //     connectWith: [".board-category-sortable", ".board-sortable", ".board-container-sortable"],
-            //     placeholder: "card-placeholder mb-3",
-            //     forcePlaceholderSize: true,
-            //     activate: function(event, ui) {
-            //         console.log("activate category");
-            //     },
-            //     start: function(event, ui) {
-            //         console.log("start category");
-            //         if (ui.item.is(".board-list")) {
-            //             console.log("start sorting list");
-            //             $(".board-container-sortable").sortable("disable");
-            //             $(".board-container-sortable").sortable("refresh");
-            //             $(this).sortable("refresh");
-            //             console.log("disabled sorting for all containers")
-            //         }
-            //     },
-            //     over: function(event, ui) {
-            //         console.log("over category");
-            //     },
-            //     beforeStop: function(event, ui) {
-            //         console.log("beforeStop category");
-            //         if (ui.item.is(".board-list") && $(".board-container-sortable").find(".card-placeholder").length) {
-            //             $(".board-container-sortable").sortable("disable");
-            //         }
-            //     },
-            //     stop: function(event, ui) {
-            //         console.log("stop category");
-            //         if (ui.item.is(".board-list")) {
-            //             $(".board-container-sortable").sortable("enable");
-            //             $(".board-container-sortable").sortable("refresh");
-            //             $(this).sortable("refresh");
-            //             console.log("enabled sorting for all containers")
-            //         }
-            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-            //         // console.log(resource.name + " stopped sorting");
-            //         // resource.updateChildren($(this).children());
-            //     },
-            //     receive: function(event, ui) {
-            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-            //         // let margin_class = ui.item.attr("class").split(" ").pop();
-            //         // console.log(resource.name + " received ui");
-            //         // ui.item.removeClass(margin_class);
-            //         // ui.item.addClass("mr-3"); // change this to be layer-dependent!
-            //         // resource.updateChildren($(this).children());
-            //     }
-            // }).disableSelection();
-            // $(".board-container-sortable").sortable({
-            //     items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-list)",
-            //     connectWith: [".board-container-sortable", ".board-category-sortable"],
-            //     placeholder: "card-placeholder mb-3",
-            //     forcePlaceholderSize: true,
-            //     activate: function(event, ui) {
-            //         console.log("activate container");
-            //     },
-            //     start: function(event, ui) {
-            //         console.log("start container");
-            //     },
-            //     over: function(event, ui) {
-            //         console.log("over container");
-            //     },
-            //     stop: function(event, ui) {
-            //         console.log("stop container");
-            //         console.log(ui.item.attr("id"));
-            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-            //         // console.log(resource.name + " stopped sorting");
-            //         // resource.updateChildren($(this).children());
-            //     },
-            //     receive: function(event, ui) {
-            //         console.log(ui.item.attr("id"));
-            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-            //         // let margin_class = ui.item.attr("class").split(" ").pop();
-            //         // console.log(resource.name + " received ui");
-            //         // ui.item.removeClass(margin_class);
-            //         // ui.item.addClass("mb-3"); // change this to be layer-dependent!
-            //     }
-            // }).disableSelection();
-            // $(".board-section-sortable").sortable({
-            //     items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-section)",
-            //     connectWith: [".board-section-sortable", ".board-sortable", ".board-category-sortable"],
-            //     placeholder: "card-placeholder mb-3",
-            //     forcePlaceholderSize: true,
-            //     receive: function(event, ui) {
-            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-            //         // let margin_class = ui.item.attr("class").split(" ").pop();
-            //         // console.log(resource.name + " received ui");
-            //         // ui.item.removeClass(margin_class);
-            //         // ui.item.addClass("mb-3"); // change this to be layer-dependent!
-            //     },
-            //     stop: function(event, ui) {
-            //         // let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
-            //         // console.log(resource.name + " stopped sorting");
-            //         // resource.updateChildren($(this).children());
-            //     }
-            // }).disableSelection();
         }
 
-        // region start
+        let INIT;
 
         $(function() {
 
@@ -773,6 +705,9 @@
             $("#board-modal-delete-btn").click(function() {
                 modalDeleteCallback();
             });
+            $("#board-modal-parent-menu").on("change", function() {
+                modalParentChosenCallback();
+            });
             $("#board-menu-show-btn").click(function() {
                 if (menuOpen) {
                     $("#board-menu-items").hide();
@@ -785,10 +720,10 @@
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new category");
-                    let parent = getResourceFromArray(context, "board");
+                    let parentRes = getResourceFromArray(context, "board");
                     let order = parseInt(Modal.order_input.val());
-                    if (order > parent.children.length + 1) {
-                        order = parent.children.length + 1;
+                    if (order > parentRes.children.length + 1) {
+                        order = parentRes.children.length + 1;
                     }
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
@@ -821,38 +756,48 @@
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new section");
-                    // let parent = getResourceFromArray(context, "board");
-                    // let order = parseInt(Modal.order_input.val());
-                    // if (order > parent.children.length + 1) {
-                    //     order = parent.children.length + 1;
-                    // }
+                    let parentRes = getResourceFromArray(context, modalParentContainerID);
+                    let order = parseInt(Modal.order_input.val());
+                    if (order > parentRes.children.length + 1) {
+                        order = parentRes.children.length + 1;
+                    }
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
                     modalResource.order = order;
-                    apiPostResource(host + containersPath, modalResource, function(data) { // callback after post success
-                        data.resourceType = "section";
-                        data.children = [];
-                        addResourceToArray(context, data);
-                        buildDOM(true);
-                        setupJquery();
-                        apiUpdateResources();
-                        console.log("new section added");
-                    });
+                    if (parentRes.resourceType === "category") {
+                        // add container first
+                        let containerRes = buildResourceObj(buildNewContainerResource(modalParentContainerID, order), "container");
+                        modalResource.order = 0;
+                        apiPostResource(host + containersPath, containerRes, function(containerData) {
+                            addResourceToArray(parentRes.children, containerData);
+                            console.log("new container added");
+                            // add section to container
+                            apiPostResource(host + containersPath, modalResource, function(sectionData) {
+                                let sectionRes = buildResourceObj(sectionData, "section");
+                                addResourceToArray(containerRes.children, sectionRes);
+                                console.log("new section added");
+                            });
+                        });
+                    } else {
+                        // add section to existing container
+                        apiPostResource(host + containersPath, modalResource, function(sectionData) {
+                            let sectionRes = buildResourceObj(sectionData, "section");
+                            addResourceToArray(parentRes.children, sectionRes);
+                            console.log("new section added");
+                        });
+                    }
                     Modal.modal.modal("hide");
                 }
                 // build parent dropdowns
-                let parent_dropdown_html = "";
+                let parent_dropdown_html = "<option selected>Choose</option>";
                 for (let i = 0; i < availableParents.length; i++) {
                     let parent = availableParents[i];
-                    parent_dropdown_html += "<li><button class='dropdown-item'>" + parent.container_tree + "</button></li>";
+                    parent_dropdown_html += "<option value=" + parent.container_id + " onclick='setModalParentContainer("
+                        + parent.container_id + ")'>" + parent.container_tree + "</option>";
                 }
-                Modal.order_input.attr({
-                    "min": 0,
-                    "max": context.length
-                });
                 Modal.parent_menu.html(parent_dropdown_html);
                 Modal.parent_div.show();
-                Modal.order_input.show();
+                Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add new section");
                 Modal.name_input.val("");
@@ -864,11 +809,11 @@
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new list");
-                    // let parent = getResourceFromArray(context, "board");
-                    // let order = parseInt(Modal.order_input.val());
-                    // if (order > parent.children.length + 1) {
-                    //     order = parent.children.length + 1;
-                    // }
+                    let parent = getResourceFromArray(context, "board");
+                    let order = parseInt(Modal.order_input.val());
+                    if (order > parent.children.length + 1) {
+                        order = parent.children.length + 1;
+                    }
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
                     modalResource.order = order;
@@ -884,18 +829,14 @@
                     Modal.modal.modal("hide");
                 }
                 // build parent dropdowns
-                let parent_dropdown_html = "";
+                let parent_dropdown_html = "<option selected>Choose</option>";
                 for (let i = 0; i < availableParents.length; i++) {
                     let parent = availableParents[i];
-                    parent_dropdown_html += "<li><button class='dropdown-item'>" + parent.container_tree + "</button></li>";
+                    parent_dropdown_html += "<option value=" + parent.container_id + ">" + parent.container_tree + "</option>";
                 }
-                Modal.order_input.attr({
-                    "min": 0,
-                    "max": context.length
-                });
                 Modal.parent_menu.html(parent_dropdown_html);
                 Modal.parent_div.show();
-                Modal.order_input.show();
+                Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add new list");
                 Modal.name_input.val("");
@@ -922,8 +863,6 @@
             });
 
         });
-
-        // endregion
 
     </script>
 </head>
@@ -965,18 +904,14 @@
                         </div>
                         <div id="board-modal-parent" class="mb-3">
                             <label class="col-form-label">Parent Container</label>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="board-modal-parent-dropdown-btn" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Choose
-                                </button>
-                                <ul id="board-modal-parent-menu" class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                    <li><button class="dropdown-item">Action</button></li>
-                                    <li><button class="dropdown-item">Another action</button></li>
-                                    <li><button class="dropdown-item">Something else here</button></li>
-                                </ul>
-                            </div>
+                            <select id="board-modal-parent-menu" class="form-select" aria-label="Default select example">
+                                <option selected>Choose</option>
+                                <option value="1">One</option>
+                                <option value="2">Two</option>
+                                <option value="3">Three</option>
+                            </select>
                         </div>
-                        <div id="board-modal-order" class="mb-3">
+                        <div id="board-modal-order" class="mb-3" onchange="setModalParentContainer()">
                             <label for="board-modal-order-input" class="col-form-label">Position: (0 is first)</label>
                             <input type="number" class="form-control" id="board-modal-order-input"/>
                         </div>
