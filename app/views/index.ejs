@@ -215,10 +215,6 @@
 
         let CALLBACKS;
 
-        function setModalParentContainer() {
-
-        }
-
         let API;
 
         function apiUpdateResources(resourceArr = context) {
@@ -376,30 +372,64 @@
         }
 
         function deleteResourceRecursively(resourceArr, resourceId = null) {
-            if (resourceId === null) {
+            if (resourceId === null) { // delete everything in array
                 for (let i = 0; i < resourceArr.length; i++) {
+                    let resourcePath;
                     if (resourceArr[i].hasOwnProperty("children")) {
                         deleteResourceRecursively(resourceArr[i].children);
                     }
-                    apiDeleteResource(host + cardsPath + "/" + modalResource._id);
+                    if (resourceArr[i].resourceType === "card") {
+                        resourcePath = cardsPath;
+                    } else if (resourceArr[i].resourceType === "list") {
+                        resourcePath = listsPath;
+                    } else {
+                        resourcePath = containersPath;
+                    }
+                    apiDeleteResource(host + resourcePath + "/" + modalResource._id, function(data){});
                 }
+                deleteEmptyContainersRecursively();
                 buildDOM(true);
                 setupJquery();
                 apiUpdateResources();
             } else {
                 for (let i = 0; i < resourceArr.length; i++) {
                     if (resourceArr[i]._id === resourceId) {
+                        let resourcePath;
+                        if (resourceArr[i].resourceType === "card") {
+                            resourcePath = cardsPath;
+                        } else if (resourceArr[i].resourceType === "list") {
+                            resourcePath = listsPath;
+                        } else {
+                            resourcePath = containersPath;
+                        }
                         resourceArr.splice(i, 1);
+                        deleteEmptyContainersRecursively();
                         updateResourceOrdersInArr(resourceArr);
                         buildDOM(true);
                         setupJquery();
-                        apiDeleteResource(host + cardsPath + "/" + modalResource._id);
+                        apiDeleteResource(host + resourcePath + "/" + modalResource._id, function(data){});
                         apiUpdateResources();
                         return;
                     }
                     else if (resourceArr[i].hasOwnProperty("children")) {
                         deleteResourceRecursively(resourceArr[i].children, resourceId);
                     }
+                }
+            }
+        }
+
+        function deleteEmptyContainersRecursively(resourceArr = context) {
+            for (let i = 0; i < resourceArr.length; i++) {
+                let res = resourceArr[i];
+                if (res.resourceType === "container" && res.children.length === 0) {
+                    resourceArr.splice(i, 1);
+                    updateResourceOrdersInArr(resourceArr);
+                    buildDOM(true);
+                    setupJquery();
+                    apiDeleteResource(host + containersPath + "/" + modalResource._id, function(data){});
+                    apiUpdateResources();
+                } else if (res.hasOwnProperty("children")) {
+                    deleteEmptyContainersRecursively(res.children);
                 }
             }
         }
@@ -934,7 +964,7 @@
                                 <option value="3">Three</option>
                             </select>
                         </div>
-                        <div id="board-modal-order" class="mb-3" onchange="setModalParentContainer()">
+                        <div id="board-modal-order" class="mb-3">
                             <label for="board-modal-order-input" class="col-form-label">Position: (0 is first)</label>
                             <input type="number" class="form-control" id="board-modal-order-input"/>
                         </div>
