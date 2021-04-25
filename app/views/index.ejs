@@ -76,7 +76,7 @@
         let modalDeleteCallback = function(){}; // the callback function to be called by the modal delete button
         let modalParentChosenCallback = function() { // the callback function to be called when parent has been chosen from select
             modalParentContainerID = Modal.parent_menu.find("option:selected").val();
-            let parentRes = getResourceFromArray(context, modalParentContainerID);
+            let parentRes = getResourceRecursively(context, modalParentContainerID);
             Modal.order_input.attr({
                 "min": 0,
                 "max": parentRes.children.length
@@ -147,7 +147,7 @@
                 let $childDom = $($childrenDom[i]);
                 if (typeof $childDom.attr("id") !== typeof undefined && $childDom.attr("id") !== false) {
                     // child dom has id attribute
-                    let childRes = getResourceFromArray(context, $childDom.attr("id").split("-")[0]);
+                    let childRes = getResourceRecursively(context, $childDom.attr("id").split("-")[0]);
                     if (this.resourceType === "container") {
                         childRes.parentId = this._id;
                     } else { // list
@@ -351,22 +351,6 @@
             });
         }
 
-        function getResourceFromArray(resourceArr, resourceId) {
-            if (resourceId === "board") {
-                return {
-                    children: context
-                }
-            }
-            for (let i = 0; i < resourceArr.length; i++) {
-                if (resourceArr[i]._id === resourceId) return resourceArr[i];
-                else if (resourceArr[i].hasOwnProperty("children")) {
-                    let resource = getResourceFromArray(resourceArr[i].children, resourceId);
-                    if (resource !== null) return resource;
-                }
-            }
-            return null;
-        }
-
         function addResourceToArray(resourceArr, resource) {
             resourceArr.splice(resource.order, 0, resource);
             updateResourceOrdersInArr(resourceArr);
@@ -375,11 +359,27 @@
             apiUpdateResources();
         }
 
-        function recursiveDeleteResource(resourceArr, resourceId = null) {
+        function getResourceRecursively(resourceArr, resourceId) {
+            if (resourceId === "board") {
+                return {
+                    children: context
+                }
+            }
+            for (let i = 0; i < resourceArr.length; i++) {
+                if (resourceArr[i]._id === resourceId) return resourceArr[i];
+                else if (resourceArr[i].hasOwnProperty("children")) {
+                    let resource = getResourceRecursively(resourceArr[i].children, resourceId);
+                    if (resource !== null) return resource;
+                }
+            }
+            return null;
+        }
+
+        function deleteResourceRecursively(resourceArr, resourceId = null) {
             if (resourceId === null) {
                 for (let i = 0; i < resourceArr.length; i++) {
                     if (resourceArr[i].hasOwnProperty("children")) {
-                        recursiveDeleteResource(resourceArr[i].children);
+                        deleteResourceRecursively(resourceArr[i].children);
                     }
                     apiDeleteResource(host + cardsPath + "/" + modalResource._id);
                 }
@@ -394,7 +394,7 @@
                         return;
                     }
                     else if (resourceArr[i].hasOwnProperty("children")) {
-                        recursiveDeleteResource(resourceArr[i].children, resourceId);
+                        deleteResourceRecursively(resourceArr[i].children, resourceId);
                     }
                 }
             }
@@ -561,7 +561,7 @@
             // "add" modal configurations
 
             $(".board-list-add-btn").click(function() {
-                let listResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                let listResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 modalResource = CardPostJson("noname", "nodesc", listResource._id, listResource.children.length);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new card");
@@ -571,7 +571,7 @@
                     apiPostResource(host + cardsPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "card";
                         buildResourceDOM(data,  $listContent);
-                        addResourceToArray(getResourceFromArray(context, listResource._id).children, data);
+                        addResourceToArray(getResourceRecursively(context, listResource._id).children, data);
                         setupJquery();
                         console.log("new card added");
                     });
@@ -589,7 +589,7 @@
             // "edit" modal configurations
 
             $(".board-category-name").click(function() {
-                modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
                     modalResource.name = Modal.name_input.val();
@@ -607,7 +607,7 @@
                 Modal.modal.modal("show");
             });
             $(".board-section-name").click(function() {
-                modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
                     modalResource.name = Modal.name_input.val();
@@ -625,13 +625,18 @@
                 Modal.modal.modal("show");
             });
             $(".board-list-name").click(function() {
-                modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
                     apiPutResource(host + listsPath + "/" + modalResource._id, modalResource);
+                    Modal.modal.modal("hide");
+                }
+                modalDeleteCallback = function() {
+                    $modalResourceDOM.remove();
+                    deleteResourceRecursively(context, modalResource._id);
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.show();
@@ -643,7 +648,7 @@
                 Modal.modal.modal("show");
             });
             $(".board-card").click(function() {
-                modalResource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this);
                 modalSaveCallback = function() {
                     modalResource.name = Modal.name_input.val();
@@ -654,7 +659,7 @@
                 }
                 modalDeleteCallback = function() {
                     $modalResourceDOM.remove();
-                    recursiveDeleteResource(context, modalResource._id);
+                    deleteResourceRecursively(context, modalResource._id);
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.hide();
@@ -668,24 +673,18 @@
 
             // sortables
 
-            // $(".board-sortable").sortable({
-            //     items: "div:not(.ui-state-disabled)",
-            //     connectWith: [".board-category-sortable", ".board-container-sortable", ".board-section-sortable"],
-            //     placeholder: "card-placeholder",
-            //     forcePlaceholderSize: true
-            // })
             $(".board-list-sortable").sortable({
                 items: "div:not(.ui-state-disabled, .board-category, .board-container, .board-section, .board-list)",
                 connectWith: ".board-list-sortable",
                 placeholder: "card-placeholder mb-3",
                 forcePlaceholderSize: true,
                 receive: function(event, ui) {
-                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                    let resource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                     resource.updateChildren($(this).children());
                     apiUpdateResources();
                 },
                 stop: function(event, ui) {
-                    let resource = getResourceFromArray(context, $(this).attr("id").split("-")[0]);
+                    let resource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                     resource.updateChildren($(this).children());
                     apiUpdateResources();
                 }
@@ -730,7 +729,7 @@
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new category");
-                    let parentRes = getResourceFromArray(context, "board");
+                    let parentRes = getResourceRecursively(context, "board");
                     let order = parseInt(Modal.order_input.val());
                     if (order > parentRes.children.length + 1) {
                         order = parentRes.children.length + 1;
@@ -766,7 +765,7 @@
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new section");
-                    let parentRes = getResourceFromArray(context, modalParentContainerID);
+                    let parentRes = getResourceRecursively(context, modalParentContainerID);
                     let order = parseInt(Modal.order_input.val());
                     if (order > parentRes.children.length + 1) {
                         order = parentRes.children.length + 1;
@@ -819,7 +818,7 @@
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new list");
-                    let parentRes = getResourceFromArray(context, modalParentContainerID);
+                    let parentRes = getResourceRecursively(context, modalParentContainerID);
                     let order = parseInt(Modal.order_input.val());
                     if (order > parentRes.children.length + 1) {
                         order = parentRes.children.length + 1;
