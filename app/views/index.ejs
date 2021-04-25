@@ -383,12 +383,16 @@
                     }
                     apiDeleteResource(host + cardsPath + "/" + modalResource._id);
                 }
-                resourceArr = [];
+                buildDOM(true);
+                setupJquery();
+                apiUpdateResources();
             } else {
                 for (let i = 0; i < resourceArr.length; i++) {
                     if (resourceArr[i]._id === resourceId) {
                         resourceArr.splice(i, 1);
                         updateResourceOrdersInArr(resourceArr);
+                        buildDOM(true);
+                        setupJquery();
                         apiDeleteResource(host + cardsPath + "/" + modalResource._id);
                         apiUpdateResources();
                         return;
@@ -598,6 +602,11 @@
                     apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
                     Modal.modal.modal("hide");
                 }
+                modalDeleteCallback = function() {
+                    $modalResourceDOM.remove();
+                    deleteResourceRecursively(context, modalResource._id);
+                    Modal.modal.modal("hide");
+                }
                 Modal.parent_div.show();
                 Modal.order_div.show();
                 Modal.delete_btn.show();
@@ -614,6 +623,11 @@
                     modalResource.description = Modal.desc_input.val();
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
                     apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
+                    Modal.modal.modal("hide");
+                }
+                modalDeleteCallback = function() {
+                    $modalResourceDOM.remove();
+                    deleteResourceRecursively(context, modalResource._id);
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.show();
