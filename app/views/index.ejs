@@ -146,6 +146,8 @@
         let modalResource; // the current resource being modified by modal
         let $modalResourceDOM; // the current resource DOM being modified by modal
         let modalParentContainerID; // the ID of the current parent container chosen
+        let modalParentCategoryID;
+        let modalParentSectionID;
         let modalSaveCallback = function(){}; // the callback function to be called by the modal save button
         let modalDeleteCallback = function(){}; // the callback function to be called by the modal delete button
         let modalParentChosenCallback = function() { // the callback function to be called when parent has been chosen from select
@@ -155,6 +157,37 @@
                 "min": 0,
                 "max": parentRes.children.length
             });
+        };
+        let modalParentCategoryChosenCallback = function() {
+            let category = getResourceRecursively(context, Modal.parent_category_sel.find("option:selected").val());
+            if (modalResource.resourceType === "section") {
+                let containers = getResourcesFromArray(category.children, "container");
+                if (containers.length > 0) {
+                    let sel_html = "<option value='none' selected>Choose</option>";
+                    for (let i = 0; i < containers.length; i++) {
+                        let parent = containers[i];
+                        sel_html += "<option value=" + parent._id + ">" + (parent.index+1) + "</option>";
+                    }
+                    Modal.parent_container_sel.html(sel_html);
+                    Modal.parent_container.show();
+                } else {
+                    Modal.parent_container.hide();
+                }
+            } else { // list
+                Modal.parent_container.hide();
+                let sections = getResourcesFromArray(category.children, "section");
+                if (sections.length > 0) {
+                    let sel_html = "<option value='none' selected>Choose</option>";
+                    for (let i = 0; i < sections.length; i++) {
+                        let parent = sections[i];
+                        sel_html += "<option value=" + parent._id + ">" + parent.name + "</option>";
+                    }
+                    Modal.parent_section_sel.html(sel_html);
+                    Modal.parent_section.show();
+                } else {
+                    Modal.parent_section.hide();
+                }
+            }
         };
 
         let OBJECTS;
@@ -175,7 +208,19 @@
                 "description": description,
                 "order": order,
                 "orientation": "x",
-                "parentId": "board"
+                "parentId": "board",
+                "resourceType": "category"
+            }
+        }
+
+        let SectionPostJson = function(name, description, order) {
+            return {
+                "name": name,
+                "description": description,
+                "order": order,
+                "orientation": "x",
+                "parentId": "",
+                "resourceType": "section"
             }
         }
 
@@ -190,6 +235,8 @@
             parent_menu: $("#board-modal").find("#board-modal-parent-menu"),
             parent_category: $("#board-modal").find("#board-modal-parent-category"),
             parent_category_sel: $("#board-modal").find("#board-modal-parent-category-select"),
+            parent_container: $("#board-modal").find("#board-modal-parent-container"),
+            parent_container_sel: $("#board-modal").find("#board-modal-parent-container-select"),
             parent_section: $("#board-modal").find("#board-modal-parent-section"),
             parent_section_sel: $("#board-modal").find("#board-modal-parent-section-select"),
             delete_btn: $("#board-modal").find("#board-modal-delete-btn")
@@ -236,6 +283,18 @@
             }
             newChildren.sort(sortFunc);
             this.children = newChildren;
+        }
+
+        let getResourcesFromArray = function(array, resourceType) {
+            let resources = [];
+            for (let i = 0; i < array.length; i++) {
+                let res = array[i];
+                res.index = i;
+                if (res.resourceType === resourceType) {
+                    resources.push(res);
+                }
+            }
+            return resources;
         }
 
         /**
@@ -677,6 +736,16 @@
             return $dom;
         }
 
+        function buildCategorySelectorHTML() {
+            let categories = getResourcesFromArray(context, "category");
+            let category_sel_html = "<option value='none' selected>Choose</option>";
+            for (let i = 0; i < categories.length; i++) {
+                let parent = categories[i];
+                category_sel_html += "<option value=" + parent._id + ">" + parent.name + "</option>";
+            }
+            return category_sel_html;
+        }
+
         function setupJquery() {
 
             // "add" modal configurations
@@ -749,6 +818,7 @@
                 }
                 Modal.parent_div.show();
                 Modal.parent_category.show();
+                Modal.parent_container.hide();
                 Modal.parent_section.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.show();
@@ -774,7 +844,8 @@
                 }
                 Modal.parent_div.show();
                 Modal.parent_category.show();
-                Modal.parent_section.show();
+                Modal.parent_container.hide();
+                Modal.parent_section.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit List");
@@ -827,11 +898,7 @@
             }).disableSelection();
         }
 
-        let INIT;
-
-        $(function() {
-
-            // initializations
+        function refreshModal() {
             Modal = {
                 modal: $("#board-modal"),
                 title: $("#board-modal").find("#board-modal-title"),
@@ -843,10 +910,22 @@
                 parent_menu: $("#board-modal").find("#board-modal-parent-menu"),
                 parent_category: $("#board-modal").find("#board-modal-parent-category"),
                 parent_category_sel: $("#board-modal").find("#board-modal-parent-category-select"),
+                parent_container: $("#board-modal").find("#board-modal-parent-container"),
+                parent_container_sel: $("#board-modal").find("#board-modal-parent-container-select"),
                 parent_section: $("#board-modal").find("#board-modal-parent-section"),
                 parent_section_sel: $("#board-modal").find("#board-modal-parent-section-select"),
                 delete_btn: $("#board-modal").find("#board-modal-delete-btn")
             }
+        }
+
+        let INIT;
+
+        $(function() {
+
+            // initializations
+
+            refreshModal();
+
             $("#board-menu-items").hide();
             $("#board-modal-save-btn").click(function() {
                 modalSaveCallback();
@@ -856,6 +935,9 @@
             });
             $("#board-modal-parent-menu").on("change", function() {
                 modalParentChosenCallback();
+            });
+            $("#board-modal-parent-category-select").on("change", function() {
+                modalParentCategoryChosenCallback();
             });
             $("#board-menu-show-btn").click(function() {
                 let d = 45;
@@ -919,10 +1001,16 @@
             });
             $("#board-menu-add-section").click(function() {
                 let availableParents = getAvailableParentContainers("section")
-                modalResource = CategoryPostJson("noname", "nodesc", 0);
+                modalResource = SectionPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new section");
-                    let parentRes = getResourceRecursively(context, modalParentContainerID);
+                    let parentId;
+                    if (Modal.parent_container.is(":visible")) {
+                        parentId = Modal.parent_container_sel.find("option:selected").val();
+                    } else {
+                        parentId = Modal.parent_category_sel.find("option:selected").val();
+                    }
+                    let parentRes = getResourceRecursively(context, parentId);
                     let order = parseInt(Modal.order_input.val());
                     if (order > parentRes.children.length + 1) {
                         order = parentRes.children.length + 1;
@@ -932,7 +1020,7 @@
                     modalResource.order = order;
                     if (parentRes.resourceType === "category") {
                         // add container first
-                        let containerRes = buildResourceObj(buildNewContainerResource(modalParentContainerID, order), "container");
+                        let containerRes = buildResourceObj(buildNewContainerResource(parentId, order), "container");
                         modalResource.order = 0;
                         apiPostResource(host + containersPath, containerRes, function(containerData) {
                             addResourceToArray(parentRes.children, containerData);
@@ -958,12 +1046,14 @@
                 let parent_dropdown_html = "<option selected>Choose</option>";
                 for (let i = 0; i < availableParents.length; i++) {
                     let parent = availableParents[i];
-                    parent_dropdown_html += "<option value=" + parent.container_id + " onclick='setModalParentContainer("
-                        + parent.container_id + ")'>" + parent.container_tree + "</option>";
+                    parent_dropdown_html += "<option value=" + parent.container_id + ">" + parent.container_tree + "</option>";
                 }
+                let category_sel_html = buildCategorySelectorHTML();
                 Modal.parent_menu.html(parent_dropdown_html);
                 Modal.parent_div.show();
+                Modal.parent_category_sel.html(category_sel_html);
                 Modal.parent_category.show();
+                Modal.parent_container.hide();
                 Modal.parent_section.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.hide();
@@ -1005,7 +1095,8 @@
                 Modal.parent_menu.html(parent_dropdown_html);
                 Modal.parent_div.show();
                 Modal.parent_category.show();
-                Modal.parent_section.show();
+                Modal.parent_container.hide();
+                Modal.parent_section.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a List");
@@ -1085,6 +1176,15 @@
                             <div id="board-modal-parent-category">
                                 <label class="col-form-label">Category</label>
                                 <select id="board-modal-parent-category-select" class="form-select modal-parent-menu" aria-label="Default select example">
+                                    <option selected>Choose</option>
+                                    <option value="1">One</option>
+                                    <option value="2">Two</option>
+                                    <option value="3">Three</option>
+                                </select>
+                            </div>
+                            <div id="board-modal-parent-container">
+                                <label class="col-form-label">In section column</label>
+                                <select id="board-modal-parent-container-select" class="form-select modal-parent-menu" aria-label="Default select example">
                                     <option selected>Choose</option>
                                     <option value="1">One</option>
                                     <option value="2">Two</option>
