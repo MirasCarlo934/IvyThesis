@@ -32,7 +32,8 @@
             border-radius: 10px;
         }
         div.board-section-name {
-            padding: 2px 16px 2px 16px;
+            padding: 2px 16px 34px 16px;
+            margin-bottom: -32px;
             background-color: rgba(255, 255, 255, 0.502);
             border-radius: 10px;
         }
@@ -187,6 +188,10 @@
             desc_input: $("#board-modal").find("#board-modal-description-input"),
             parent_div: $("#board-modal").find("#board-modal-parent"),
             parent_menu: $("#board-modal").find("#board-modal-parent-menu"),
+            parent_category: $("#board-modal").find("#board-modal-parent-category"),
+            parent_category_sel: $("#board-modal").find("#board-modal-parent-category-select"),
+            parent_section: $("#board-modal").find("#board-modal-parent-section"),
+            parent_section_sel: $("#board-modal").find("#board-modal-parent-section-select"),
             delete_btn: $("#board-modal").find("#board-modal-delete-btn")
         }
 
@@ -674,19 +679,6 @@
 
         function setupJquery() {
 
-            // modify margins/paddings
-
-            if (!sectionNameHeightSet) {
-                let listNameHeight = $(".board-list-name").first().css("height");
-                if (listNameHeight !== undefined) {
-                    $(".board-section-name").css({
-                        "margin-bottom": "-=" + listNameHeight,
-                        "padding-bottom": "+=" + listNameHeight
-                    });
-                    sectionNameHeightSet = true;
-                }
-            }
-
             // "add" modal configurations
 
             $(".board-list-add-btn").click(function() {
@@ -732,7 +724,7 @@
                     deleteResourceRecursively(context, modalResource._id);
                     Modal.modal.modal("hide");
                 }
-                Modal.parent_div.show();
+                Modal.parent_div.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit Category");
@@ -756,6 +748,8 @@
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.show();
+                Modal.parent_category.show();
+                Modal.parent_section.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit Section");
@@ -779,6 +773,8 @@
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.show();
+                Modal.parent_category.show();
+                Modal.parent_section.show();
                 Modal.order_div.show();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit List");
@@ -787,6 +783,7 @@
                 Modal.modal.modal("show");
             });
             $(".board-card").click(function() {
+                console.log("card clicked");
                 modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this);
                 modalSaveCallback = function() {
@@ -844,6 +841,10 @@
                 desc_input: $("#board-modal").find("#board-modal-description-input"),
                 parent_div: $("#board-modal").find("#board-modal-parent"),
                 parent_menu: $("#board-modal").find("#board-modal-parent-menu"),
+                parent_category: $("#board-modal").find("#board-modal-parent-category"),
+                parent_category_sel: $("#board-modal").find("#board-modal-parent-category-select"),
+                parent_section: $("#board-modal").find("#board-modal-parent-section"),
+                parent_section_sel: $("#board-modal").find("#board-modal-parent-section-select"),
                 delete_btn: $("#board-modal").find("#board-modal-delete-btn")
             }
             $("#board-menu-items").hide();
@@ -908,7 +909,7 @@
                     "min": 0,
                     "max": context.length
                 });
-                Modal.parent_div.show();
+                Modal.parent_div.hide();
                 Modal.order_input.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a Category");
@@ -962,6 +963,8 @@
                 }
                 Modal.parent_menu.html(parent_dropdown_html);
                 Modal.parent_div.show();
+                Modal.parent_category.show();
+                Modal.parent_section.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a Section");
@@ -1001,6 +1004,8 @@
                 }
                 Modal.parent_menu.html(parent_dropdown_html);
                 Modal.parent_div.show();
+                Modal.parent_category.show();
+                Modal.parent_section.show();
                 Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a List");
@@ -1070,13 +1075,31 @@
                             <textarea class="form-control modal-text-input" id="board-modal-description-input" rows="5"></textarea>
                         </div>
                         <div id="board-modal-parent" class="mb-3">
-                            <label class="col-form-label">Place under</label>
+                            <label class="col-form-label"><b>Place under</b></label>
                             <select id="board-modal-parent-menu" class="form-select modal-parent-menu" aria-label="Default select example">
                                 <option selected>Choose</option>
                                 <option value="1">One</option>
                                 <option value="2">Two</option>
                                 <option value="3">Three</option>
                             </select>
+                            <div id="board-modal-parent-category">
+                                <label class="col-form-label">Category</label>
+                                <select id="board-modal-parent-category-select" class="form-select modal-parent-menu" aria-label="Default select example">
+                                    <option selected>Choose</option>
+                                    <option value="1">One</option>
+                                    <option value="2">Two</option>
+                                    <option value="3">Three</option>
+                                </select>
+                            </div>
+                            <div id="board-modal-parent-section">
+                                <label class="col-form-label">Section</label>
+                                <select id="board-modal-parent-section-select" class="form-select modal-parent-menu" aria-label="Default select example">
+                                    <option selected>Choose</option>
+                                    <option value="1">One</option>
+                                    <option value="2">Two</option>
+                                    <option value="3">Three</option>
+                                </select>
+                            </div>
                         </div>
                         <div id="board-modal-order" class="mb-3">
                             <label for="board-modal-order-input" class="col-form-label">Position: (0 is first)</label>
