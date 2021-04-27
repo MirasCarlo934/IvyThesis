@@ -653,6 +653,17 @@
                     "id": section._id + "-" + "name",
                     "class": "board-section-name ui-state-disabled"
                 });
+                if (section.children.length > 0) {
+                    $name.css({
+                        "padding-bottom": "34px",
+                        "margin-bottom": "-32px"
+                    });
+                } else {
+                    $name.css({
+                        "padding-bottom": "2px",
+                        "margin-bottom": "0px"
+                    });
+                }
                 $content.attr({
                     "id": section._id + "-" + "content",
                     "class": "layout d-flex board-section-sortable"
