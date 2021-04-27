@@ -15,8 +15,25 @@
             font-family: "Nunito", sans-serif;
         }
 
+        div.board-category-name {
+            color: white;
+            font-weight: lighter;
+            /*font-size: 30px;*/
+        }
+
+        div.board-category-name-line {
+            width: 100%;
+            border-bottom: 1px solid #000;
+            line-height: 0.1em;
+        }
+
         div.board-section {
             background-color: rgba(255, 255, 255, 0.102);
+            border-radius: 10px;
+        }
+        div.board-section-name {
+            padding: 2px 16px 2px 16px;
+            background-color: rgba(255, 255, 255, 0.502);
             border-radius: 10px;
         }
 
@@ -24,6 +41,11 @@
             background-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.16);
             border-radius: 10px;
+        }
+        div.board-list-name {
+            padding: 4px 16px 4px 16px;
+            border-radius: 10px 10px 0 0;
+            background-color: rgb(255, 255, 255);
         }
 
         div.board-card {
@@ -115,6 +137,8 @@
         let context = [];
         let totalResources = 0;
         let builtResources = 0;
+
+        let sectionNameHeightSet = false;
 
         let menuOpen = false;
 
@@ -539,7 +563,16 @@
                     // let margin_class = $last.attr("class").split(" ").pop();
                     // $last.removeClass(margin_class);
                 }
-                $name.html(container.name);
+                // $name.html("\
+                //     <div class='d-flex'> \
+                //         <div>\
+                //             " + container.name + "\
+                //         </div>\
+                //         <div class='board-category-name-line'>\
+                //         </div>\
+                //     </div>\
+                // ");
+                $name.html(container.name.toUpperCase());
                 $dom.append($name);
                 $dom.append($content);
             } else if (resource.resourceType === "section") {
@@ -565,7 +598,7 @@
                     let res = section.children[i];
                     $last = buildResourceDOM(res, $content,  section.orientation, layout_layer + 1);
                 }
-                $name.html(section.name);
+                $name.html(section.name.toUpperCase());
                 $dom.append($name);
                 $dom.append($content);
             } else if (resource.resourceType === "container") {
@@ -640,6 +673,19 @@
         }
 
         function setupJquery() {
+
+            // modify margins/paddings
+
+            if (!sectionNameHeightSet) {
+                let listNameHeight = $(".board-list-name").first().css("height");
+                if (listNameHeight !== undefined) {
+                    $(".board-section-name").css({
+                        "margin-bottom": "-=" + listNameHeight,
+                        "padding-bottom": "+=" + listNameHeight
+                    });
+                    sectionNameHeightSet = true;
+                }
+            }
 
             // "add" modal configurations
 
