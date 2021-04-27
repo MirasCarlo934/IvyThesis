@@ -161,7 +161,7 @@
         let modalParentCategoryChosenCallback = function() {
             let category = getResourceRecursively(context, Modal.parent_category_sel.find("option:selected").val());
             if (modalResource.resourceType === "section") {
-                let containers = getResourcesFromArray(category.children, "container");
+                let containers = getResourcesRecursively(category.children, "container");
                 if (containers.length > 0) {
                     let sel_html = "<option value='none' selected>Choose</option>";
                     for (let i = 0; i < containers.length; i++) {
@@ -175,7 +175,8 @@
                 }
             } else { // list
                 Modal.parent_container.hide();
-                let sections = getResourcesFromArray(category.children, "section");
+                let sections = getResourcesRecursively(category.children, "section");
+                console.log(sections.length);
                 if (sections.length > 0) {
                     let sel_html = "<option value='none' selected>Choose</option>";
                     for (let i = 0; i < sections.length; i++) {
@@ -221,6 +222,16 @@
                 "orientation": "x",
                 "parentId": "",
                 "resourceType": "section"
+            }
+        }
+
+        let ListPostJson = function(name, description, order) {
+            return {
+                "name": name,
+                "description": description,
+                "order": order,
+                "parentId": "",
+                "resourceType": "list"
             }
         }
 
@@ -285,16 +296,18 @@
             this.children = newChildren;
         }
 
-        let getResourcesFromArray = function(array, resourceType) {
-            let resources = [];
+        let getResourcesRecursively = function(array, resourceType, resourceArr = []) {
             for (let i = 0; i < array.length; i++) {
                 let res = array[i];
                 res.index = i;
                 if (res.resourceType === resourceType) {
-                    resources.push(res);
+                    resourceArr.push(res);
+                }
+                if (res.hasOwnProperty("children")) {
+                    getResourcesRecursively(res.children, resourceType, resourceArr);
                 }
             }
-            return resources;
+            return resourceArr;
         }
 
         /**
@@ -336,7 +349,6 @@
                         tree =  container_tree + " -> " + resource.name;
                     }
                     if (resource.resourceType === "category" || resource.resourceType === "section") {
-                        console.log(resource);
                         output_arr.push({
                             container_tree: tree,
                             container_id: resource._id
@@ -748,7 +760,7 @@
         }
 
         function buildCategorySelectorHTML() {
-            let categories = getResourcesFromArray(context, "category");
+            let categories = getResourcesRecursively(context, "category");
             let category_sel_html = "<option value='none' selected>Choose</option>";
             for (let i = 0; i < categories.length; i++) {
                 let parent = categories[i];
@@ -1053,14 +1065,7 @@
                     }
                     Modal.modal.modal("hide");
                 }
-                // build parent dropdowns
-                let parent_dropdown_html = "<option selected>Choose</option>";
-                for (let i = 0; i < availableParents.length; i++) {
-                    let parent = availableParents[i];
-                    parent_dropdown_html += "<option value=" + parent.container_id + ">" + parent.container_tree + "</option>";
-                }
                 let category_sel_html = buildCategorySelectorHTML();
-                Modal.parent_menu.html(parent_dropdown_html);
                 Modal.parent_div.show();
                 Modal.parent_category_sel.html(category_sel_html);
                 Modal.parent_category.show();
@@ -1075,10 +1080,18 @@
             });
             $("#board-menu-add-list").click(function() {
                 let availableParents = getAvailableParentContainers("list")
-                modalResource = CategoryPostJson("noname", "nodesc", 0);
+                modalResource = ListPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new list");
-                    let parentRes = getResourceRecursively(context, modalParentContainerID);
+                    let parentId;
+                    if (Modal.parent_section.is(":visible")) {
+                        parentId = Modal.parent_section_sel.find("option:selected").val();
+                    } else if (Modal.parent_category_sel.find("option:selected").val() !== "none") {
+                        parentId = Modal.parent_category_sel.find("option:selected").val();
+                    } else {
+                        parentId = "board";
+                    }
+                    let parentRes = getResourceRecursively(context, parentId);
                     let order = parseInt(Modal.order_input.val());
                     if (order > parentRes.children.length + 1) {
                         order = parentRes.children.length + 1;
@@ -1105,6 +1118,7 @@
                 }
                 Modal.parent_menu.html(parent_dropdown_html);
                 Modal.parent_div.show();
+                Modal.parent_category_sel.html(buildCategorySelectorHTML());
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
