@@ -242,6 +242,8 @@
             order_input: $("#board-modal").find("#board-modal-order-input"),
             name_input: $("#board-modal").find("#board-modal-name-input"),
             desc_input: $("#board-modal").find("#board-modal-description-input"),
+            image_div: $("#board-modal").find("#board-modal-image"),
+            image_input: $("#board-modal").find("#board-modal-image-input"),
             parent_div: $("#board-modal").find("#board-modal-parent"),
             parent_menu: $("#board-modal").find("#board-modal-parent-menu"),
             parent_category: $("#board-modal").find("#board-modal-parent-category"),
@@ -741,6 +743,7 @@
                 $dom.append($content);
             } else if (resource.resourceType === "card") {
                 let card = resource;
+                let $img = $("<img class='card-img-top ui-state-disabled'/>");
                 let $body = $("<div></div>");
                 $dom.attr({
                     "id": card._id,
@@ -749,7 +752,13 @@
                 $body.attr({
                     "class": "card-body ui-state-disabled"
                 });
+                if (card.hasOwnProperty("image") && card.image !== "") {
+                    $img.attr({
+                        "src": card.image
+                    });
+                }
                 $body.html(card.name);
+                $dom.append($img);
                 $dom.append($body);
                 $layout.find(".board-list-add-btn-div").before($dom);
                 return $dom;
@@ -791,6 +800,7 @@
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.hide();
+                Modal.image_div.show();
                 Modal.order_div.hide();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a Card");
@@ -817,6 +827,7 @@
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.hide();
+                Modal.image_div.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit Category");
@@ -866,6 +877,7 @@
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.show();
+                Modal.image_div.hide();
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
@@ -881,10 +893,19 @@
                 modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this);
                 modalSaveCallback = function() {
+                    let image_input = document.getElementById("board-modal-image-input")
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
+                    if (image_input.files && image_input.files[0]) {
+                        modalResource.image = image_input.files[0];
+                        let reader = new FileReader();
+                        reader.onload = function (e) {
+                            $modalResourceDOM.find(".card-img-top").attr('src', e.target.result);
+                        }
+                        reader.readAsDataURL(image_input.files[0]);
+                    }
                     $modalResourceDOM.find(".card-body").html(modalResource.name);
-                    apiPutResource(host + cardsPath + "/" + modalResource._id, modalResource);
+                    apiPutResource(host + cardsPath + "/" + modalResource._id, modalResource, function(){});
                     Modal.modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
@@ -893,6 +914,7 @@
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.hide();
+                Modal.image_div.show();
                 Modal.order_div.hide();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit Card");
@@ -929,6 +951,8 @@
                 order_input: $("#board-modal").find("#board-modal-order-input"),
                 name_input: $("#board-modal").find("#board-modal-name-input"),
                 desc_input: $("#board-modal").find("#board-modal-description-input"),
+                image_div: $("#board-modal").find("#board-modal-image"),
+                image_input: $("#board-modal").find("#board-modal-image-input"),
                 parent_div: $("#board-modal").find("#board-modal-parent"),
                 parent_menu: $("#board-modal").find("#board-modal-parent-menu"),
                 parent_category: $("#board-modal").find("#board-modal-parent-category"),
@@ -1015,6 +1039,7 @@
                     "max": context.length
                 });
                 Modal.parent_div.hide();
+                Modal.image_div.hide();
                 Modal.order_input.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a Category");
@@ -1071,6 +1096,7 @@
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
+                Modal.image_div.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a Section");
@@ -1122,6 +1148,7 @@
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
+                Modal.image_div.hide();
                 Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a List");
@@ -1156,6 +1183,7 @@
 <!--<body style="background-image: url('<%=api.host%>/img/background.jpg')">-->
 <!--    <img src="img/testimg.png" alt="Test"/>-->
 <body class="bg-transparent">
+<img id="testimg"/>
 <div class="layout-body container-fluid">
 
     <div id="board-menu" class="position-fixed bottom-0 end-0 p-4">
@@ -1189,6 +1217,12 @@
                                 <i class="fas fa-align-left"></i> <b>Description</b>
                             </label>
                             <textarea class="form-control modal-text-input" id="board-modal-description-input" rows="5"></textarea>
+                        </div>
+                        <div id="board-modal-image" class="mb-3">
+                            <label for="board-modal-image-input" class="col-form-label">
+                                <i class="fas fa-align-left"></i> <b>Set card image</b>
+                            </label>
+                            <input type="file" id="board-modal-image-input" accept="image/*"/>
                         </div>
                         <div id="board-modal-parent" class="mb-3">
                             <label class="col-form-label"><b>Place under</b></label>
