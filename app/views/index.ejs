@@ -163,7 +163,7 @@
             if (modalResource.resourceType === "section") {
                 let containers = getResourcesRecursively(category.children, "container");
                 if (containers.length > 0) {
-                    let sel_html = "<option value='none' selected>Choose</option>";
+                    let sel_html = "<option value='none' selected>(Just in current category)</option>";
                     for (let i = 0; i < containers.length; i++) {
                         let parent = containers[i];
                         sel_html += "<option value=" + parent._id + ">" + (parent.index+1) + "</option>";
@@ -178,7 +178,7 @@
                 let sections = getResourcesRecursively(category.children, "section");
                 console.log(sections.length);
                 if (sections.length > 0) {
-                    let sel_html = "<option value='none' selected>Choose</option>";
+                    let sel_html = "<option value='none' selected>(Just in current category)</option>";
                     for (let i = 0; i < sections.length; i++) {
                         let parent = sections[i];
                         sel_html += "<option value=" + parent._id + ">" + parent.name + "</option>";
@@ -727,10 +727,16 @@
                 let list = resource;
                 let $name = $("<div></div>");
                 let $content = $("<div></div>");
+                let $dom_class = "board-list";
                 let $last;
+                if (list.parentId === "board") {
+                    $dom_class += " me-5";
+                } else {
+                    $dom_class += " me-3";
+                }
                 $dom.attr({
                     "id": list._id,
-                    "class": "board-list me-3"
+                    "class": $dom_class
                 });
                 $name.attr({
                     "id": list._id + "-" + "name",
@@ -774,9 +780,13 @@
                     "class": "card-body ui-state-disabled"
                 });
                 if (card.hasOwnProperty("image") && card.image !== "") {
-                    $img.attr({
-                        "src": card.image
-                    });
+                    let reader = new FileReader();
+                    reader.onload = function (e) {
+                        $img.attr({
+                            "src": e.target.result
+                        });
+                    }
+                    reader.readAsDataURL(card.image);
                 }
                 $body.html(card.name);
                 $dom.append($img);
@@ -789,9 +799,14 @@
             return $dom;
         }
 
-        function buildCategorySelectorHTML() {
+        function buildCategorySelectorHTML(isList = false) {
             let categories = getResourcesRecursively(context, "category");
-            let category_sel_html = "<option value='none' selected>Choose</option>";
+            let category_sel_html
+            if (isList) {
+                category_sel_html = "<option value='none' selected>(Just on board)</option>";
+            } else {
+                category_sel_html = "<option value='none' selected>Choose</option>";
+            }
             for (let i = 0; i < categories.length; i++) {
                 let parent = categories[i];
                 category_sel_html += "<option value=" + parent._id + ">" + parent.name + "</option>";
@@ -809,8 +824,17 @@
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new card");
                     let $listContent = $("#" + listResource._id + "-content");
+                    let image_input = document.getElementById("board-modal-image-input");
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
+                    if (image_input.files && image_input.files[0]) {
+                        modalResource.image = image_input.files[0];
+                        // let reader = new FileReader();
+                        // reader.onload = function (e) {
+                        //     $modalResourceDOM.find(".card-img-top").attr('src', e.target.result);
+                        // }
+                        // reader.readAsDataURL(image_input.files[0]);
+                    }
                     apiPostResource(host + cardsPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "card";
                         buildResourceDOM(data,  $listContent);
@@ -821,6 +845,7 @@
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.hide();
+                Modal.image_input.val("");
                 Modal.image_div.show();
                 Modal.order_div.hide();
                 Modal.delete_btn.hide();
@@ -940,6 +965,7 @@
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.hide();
+                Modal.image_input.val("");
                 Modal.image_div.show();
                 Modal.order_div.hide();
                 Modal.delete_btn.show();
@@ -1049,6 +1075,7 @@
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
                     modalResource.order = order;
+                    modalResource.parentId = "board";
                     apiPostResource(host + containersPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "category";
                         data.children = [];
@@ -1092,6 +1119,7 @@
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
                     modalResource.order = order;
+                    modalResource.parentId = parentId;
                     if (parentRes.resourceType === "category") {
                         // add container first
                         let containerRes = buildResourceObj(buildNewContainerResource(parentId, order), "container");
@@ -1144,8 +1172,6 @@
                         parentId = "board";
                     }
                     let parentRes = getResourceRecursively(context, parentId);
-                    console.log(parentId)
-                    console.debug(parentRes);
                     let order = parseInt(Modal.order_input.val());
                     if (order > parentRes.children.length + 1) {
                         order = parentRes.children.length + 1;
@@ -1153,6 +1179,7 @@
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
                     modalResource.order = order;
+                    modalResource.parentId = parentId;
                     apiPostResource(host + containersPath, modalResource, function(data) { // callback after post success
                         data.resourceType = "list";
                         data.children = [];
@@ -1172,7 +1199,7 @@
                 }
                 Modal.parent_menu.html(parent_dropdown_html);
                 Modal.parent_div.show();
-                Modal.parent_category_sel.html(buildCategorySelectorHTML());
+                Modal.parent_category_sel.html(buildCategorySelectorHTML(true));
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
