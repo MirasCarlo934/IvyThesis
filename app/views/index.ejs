@@ -649,7 +649,7 @@
                 });
                 $content.attr({
                     "id": container._id + "-" + "content",
-                    "class": "layout d-flex ui-state-disabled board-category-sortable"
+                    "class": "layout d-inline-flex ui-state-disabled board-category-sortable"
                 });
                 // build children
                 for (let i = 0; i < container.children.length; i++) {
@@ -706,7 +706,7 @@
                 }
                 $content.attr({
                     "id": section._id + "-" + "content",
-                    "class": "layout d-flex board-section-sortable"
+                    "class": "layout d-inline-flex board-section-sortable"
                 });
                 // build children
                 for (let i = 0; i < section.children.length; i++) {
@@ -721,7 +721,7 @@
                 // DOM setup
                 $dom.attr({
                     "id": container._id,
-                    "class": "board-container bg-transparent d-flex flex-column layout ui-state-disabled board-container-sortable me-4"
+                    "class": "board-container bg-transparent d-inline-flex flex-column layout ui-state-disabled board-container-sortable me-4"
                 });
                 // build children
                 for (let i = 0; i < container.children.length; i++) {
@@ -732,7 +732,8 @@
                 let list = resource;
                 let $name = $("<div></div>");
                 let $content = $("<div></div>");
-                let $dom_class = "board-list";
+                // let $dom_class = "board-list d-inline-flex flex-column";
+                let $dom_class = "board-list d-table";
                 let $last;
                 if (list.parentId === "board") {
                     $dom_class += " me-5";
@@ -749,7 +750,8 @@
                 });
                 $content.attr({
                     "id": list._id + "-" + "content",
-                    "class": "p-3 ui-state-disabled board-list-sortable"
+                    "class": "p-3 d-table ui-state-disabled board-list-sortable",
+                    // "class": "p-3 d-inline-flex flex-column ui-state-disabled board-list-sortable"
                 });
                 // add add_btn
                 let $filler = $("<div class='card-filler'></div>");
@@ -800,7 +802,7 @@
                 $body.html(card.name);
                 if (card.hasOwnProperty("description") && card.description.length > 0) {
                     // $footer.html("<i class='fas fa-align-left'></i>");
-                    $body.append("<div style='width:100%;height:8px;'></div><i class='fas fa-align-left'></i>");
+                    $body.append("<div class='ui-state-disabled' style='width:100%;height:8px;'></div><i class='fas fa-align-left'></i>");
                 }
                 $dom.append($img);
                 $dom.append($body);
