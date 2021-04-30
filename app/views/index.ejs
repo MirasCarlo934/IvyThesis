@@ -268,12 +268,16 @@
             let lastOrder = -1;
             for (let i = 0; i < resourceArr.length; i++) {
                 let res = resourceArr[i];
+                console.debug("before");
+                console.debug(res);
                 if (lastOrder === res.order) { // resource has been added, increment
                     res.order = res.order + 1;
                 } else if (res.order - lastOrder > 1) { // resource has been deleted, decrement
                     res.order = res.order - 1;
                 }
                 lastOrder = res.order;
+                console.debug("after");
+                console.debug(res);
             }
             resourceArr.sort(sortFunc);
         }
@@ -402,7 +406,9 @@
                     success: successFunc
                 });
             } else {
-                data._id = create_UUID();
+                if (!data._id) {
+                    data._id = create_UUID();
+                }
                 successFunc(data);
             }
         }
@@ -499,6 +505,21 @@
         }
 
         function addResourceToArray(resourceArr, resource) {
+            resourceArr.splice(resource.order, 0, resource);
+            updateResourceOrdersInArr(resourceArr);
+            buildDOM(true);
+            setupJquery();
+            apiUpdateResources();
+        }
+
+        function moveResourceInArray(resourceArr, resource) {
+            for (let i = 0; i < resourceArr.length; i++) {
+                let res = resourceArr[i];
+                if (res._id === resource._id) {
+                    resourceArr.splice(i, 1);
+                    break;
+                }
+            }
             resourceArr.splice(resource.order, 0, resource);
             updateResourceOrdersInArr(resourceArr);
             buildDOM(true);
@@ -817,8 +838,12 @@
                 modalSaveCallback = function() {
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
+                    modalResource.order = parseInt(Modal.order_input.val());
                     $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
-                    apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
+                    apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function(data) {
+                        moveResourceInArray(context, modalResource);
+                        console.log("category edited");
+                    });
                     Modal.modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
@@ -833,6 +858,7 @@
                 Modal.title.html("Edit Category");
                 Modal.name_input.val(modalResource.name);
                 Modal.desc_input.val(modalResource.description);
+                Modal.order_input.val(modalResource.order);
                 Modal.modal.modal("show");
             });
             $(".board-section-name").click(function() {
