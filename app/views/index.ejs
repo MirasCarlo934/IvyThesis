@@ -1136,7 +1136,7 @@
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new list");
                     let parentId;
-                    if (Modal.parent_section.is(":visible")) {
+                    if (Modal.parent_section.is(":visible") && Modal.parent_section.find("option:selected").val() !== "none") {
                         parentId = Modal.parent_section_sel.find("option:selected").val();
                     } else if (Modal.parent_category_sel.find("option:selected").val() !== "none") {
                         parentId = Modal.parent_category_sel.find("option:selected").val();
@@ -1144,6 +1144,8 @@
                         parentId = "board";
                     }
                     let parentRes = getResourceRecursively(context, parentId);
+                    console.log(parentId)
+                    console.debug(parentRes);
                     let order = parseInt(Modal.order_input.val());
                     if (order > parentRes.children.length + 1) {
                         order = parentRes.children.length + 1;
@@ -1252,12 +1254,12 @@
                         </div>
                         <div id="board-modal-parent" class="mb-3">
                             <label class="col-form-label"><b>Place under</b></label>
-                            <select id="board-modal-parent-menu" class="form-select modal-parent-menu" aria-label="Default select example">
-                                <option selected>Choose</option>
-                                <option value="1">One</option>
-                                <option value="2">Two</option>
-                                <option value="3">Three</option>
-                            </select>
+<!--                            <select id="board-modal-parent-menu" class="form-select modal-parent-menu" aria-label="Default select example">-->
+<!--                                <option selected>Choose</option>-->
+<!--                                <option value="1">One</option>-->
+<!--                                <option value="2">Two</option>-->
+<!--                                <option value="3">Three</option>-->
+<!--                            </select>-->
                             <div id="board-modal-parent-category">
                                 <label class="col-form-label">Category</label>
                                 <select id="board-modal-parent-category-select" class="form-select modal-parent-menu" aria-label="Default select example">
@@ -1300,9 +1302,6 @@
         </div>
     </div>
 
-    <h1>
-        <%= title %>
-    </h1>
     <div id="board" class="layout-board layout">
 <!--        <div class="descriptor">I am a board</div><br/>-->
         <div id="board-content" class="d-flex p-2 layout content board-sortable">
