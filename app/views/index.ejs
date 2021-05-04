@@ -51,13 +51,13 @@
 
         div.board-card {
             border-radius: 10px;
-            background-color: rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.8);
             box-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.2);
         }
 
         button.board-list-add-btn {
             border-radius: 10px;
-            background-color: rgba(255, 255, 255, 0.302);
+            background-color: rgba(255, 255, 255, 0.8);
             box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.25);
         }
 
@@ -82,6 +82,10 @@
 
         .card, .card-filler {
             width: 250px;
+        }
+
+        .card-body {
+            padding: 8px 16px !important;
         }
 
         .board-menu-btn {
@@ -241,6 +245,7 @@
             order_div: $("#board-modal").find("#board-modal-order"),
             order_input: $("#board-modal").find("#board-modal-order-input"),
             name_input: $("#board-modal").find("#board-modal-name-input"),
+            desc_div: $("#board-modal").find("#board-modal-description"),
             desc_input: $("#board-modal").find("#board-modal-description-input"),
             image_div: $("#board-modal").find("#board-modal-image"),
             image_input: $("#board-modal").find("#board-modal-image-input"),
@@ -644,7 +649,7 @@
                 });
                 $content.attr({
                     "id": container._id + "-" + "content",
-                    "class": "layout d-flex ui-state-disabled board-category-sortable"
+                    "class": "layout d-inline-flex ui-state-disabled board-category-sortable"
                 });
                 // build children
                 for (let i = 0; i < container.children.length; i++) {
@@ -701,7 +706,7 @@
                 }
                 $content.attr({
                     "id": section._id + "-" + "content",
-                    "class": "layout d-flex board-section-sortable"
+                    "class": "layout d-inline-flex board-section-sortable"
                 });
                 // build children
                 for (let i = 0; i < section.children.length; i++) {
@@ -716,7 +721,7 @@
                 // DOM setup
                 $dom.attr({
                     "id": container._id,
-                    "class": "board-container bg-transparent d-flex flex-column layout ui-state-disabled board-container-sortable me-4"
+                    "class": "board-container bg-transparent d-inline-flex flex-column layout ui-state-disabled board-container-sortable me-4"
                 });
                 // build children
                 for (let i = 0; i < container.children.length; i++) {
@@ -727,7 +732,8 @@
                 let list = resource;
                 let $name = $("<div></div>");
                 let $content = $("<div></div>");
-                let $dom_class = "board-list";
+                // let $dom_class = "board-list d-inline-flex flex-column";
+                let $dom_class = "board-list d-table";
                 let $last;
                 if (list.parentId === "board") {
                     $dom_class += " me-5";
@@ -744,7 +750,8 @@
                 });
                 $content.attr({
                     "id": list._id + "-" + "content",
-                    "class": "p-3 ui-state-disabled board-list-sortable"
+                    "class": "p-3 d-table ui-state-disabled board-list-sortable",
+                    // "class": "p-3 d-inline-flex flex-column ui-state-disabled board-list-sortable"
                 });
                 // add add_btn
                 let $filler = $("<div class='card-filler'></div>");
@@ -772,12 +779,16 @@
                 let card = resource;
                 let $img = $("<img class='card-img-top ui-state-disabled'/>");
                 let $body = $("<div></div>");
+                let $footer = $("<div></div>");
                 $dom.attr({
                     "id": card._id,
                     "class": "board-card card main p-2 mb-3"
                 });
                 $body.attr({
                     "class": "card-body ui-state-disabled"
+                });
+                $footer.attr({
+                    "class": "card-footer ui-state-disabled"
                 });
                 if (card.hasOwnProperty("image") && card.image !== "") {
                     let reader = new FileReader();
@@ -789,6 +800,10 @@
                     reader.readAsDataURL(card.image);
                 }
                 $body.html(card.name);
+                if (card.hasOwnProperty("description") && card.description.length > 0) {
+                    // $footer.html("<i class='fas fa-align-left'></i>");
+                    $body.append("<div class='ui-state-disabled' style='width:100%;height:8px;'></div><i class='fas fa-align-left'></i>");
+                }
                 $dom.append($img);
                 $dom.append($body);
                 $layout.find(".board-list-add-btn-div").before($dom);
@@ -852,6 +867,8 @@
                 Modal.title.html("Add a Card");
                 Modal.name_input.val("");
                 Modal.desc_input.val("");
+                Modal.name_input.show();
+                Modal.desc_div.show();
                 Modal.modal.modal("show");
             })
 
@@ -884,6 +901,8 @@
                 Modal.name_input.val(modalResource.name);
                 Modal.desc_input.val(modalResource.description);
                 Modal.order_input.val(modalResource.order);
+                Modal.name_input.show();
+                Modal.desc_div.show();
                 Modal.modal.modal("show");
             });
             $(".board-section-name").click(function() {
@@ -910,6 +929,8 @@
                 Modal.title.html("Edit Section");
                 Modal.name_input.val(modalResource.name);
                 Modal.desc_input.val(modalResource.description);
+                Modal.name_input.show();
+                Modal.desc_div.show();
                 Modal.modal.modal("show");
             });
             $(".board-list-name").click(function() {
@@ -937,6 +958,8 @@
                 Modal.title.html("Edit List");
                 Modal.name_input.val(modalResource.name);
                 Modal.desc_input.val(modalResource.description);
+                Modal.name_input.show();
+                Modal.desc_div.show();
                 Modal.modal.modal("show");
             });
             $(".board-card").click(function() {
@@ -957,6 +980,7 @@
                     }
                     $modalResourceDOM.find(".card-body").html(modalResource.name);
                     apiPutResource(host + cardsPath + "/" + modalResource._id, modalResource, function(){});
+                    buildDOM(true);
                     Modal.modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
@@ -972,6 +996,8 @@
                 Modal.title.html("Edit Card");
                 Modal.name_input.val(modalResource.name);
                 Modal.desc_input.val(modalResource.description);
+                Modal.name_input.show();
+                Modal.desc_div.show();
                 Modal.modal.modal("show");
             });
 
@@ -1002,6 +1028,7 @@
                 order_div: $("#board-modal").find("#board-modal-order"),
                 order_input: $("#board-modal").find("#board-modal-order-input"),
                 name_input: $("#board-modal").find("#board-modal-name-input"),
+                desc_div: $("#board-modal").find("#board-modal-description"),
                 desc_input: $("#board-modal").find("#board-modal-description-input"),
                 image_div: $("#board-modal").find("#board-modal-image"),
                 image_input: $("#board-modal").find("#board-modal-image-input"),
@@ -1063,6 +1090,35 @@
                 }
                 menuOpen = !menuOpen;
             });
+            $("#board-menu-change-bg").click(function() {
+                modalSaveCallback = function() {
+                    let image_input = document.getElementById("board-modal-image-input");
+                    if (image_input.files && image_input.files[0]) {
+                        let reader = new FileReader();
+                        reader.onload = function (e) {
+                            $("html").css({
+                                "background": "url(" + e.target.result + ") no-repeat center center fixed",
+                                "-webkit-background-size": "cover",
+                                "-moz-background-size": "cover",
+                                "-o-background-size": "cover",
+                                "background-size": "cover"
+                            });
+                        }
+                        reader.readAsDataURL(image_input.files[0]);
+                        Modal.image_input.val("");
+                        Modal.modal.modal("hide");
+                    }
+                    console.log("changing background");
+                }
+                Modal.parent_div.hide();
+                Modal.image_div.show();
+                Modal.order_div.hide();
+                Modal.delete_btn.hide();
+                Modal.title.html("Change Board Background");
+                Modal.name_input.hide();
+                Modal.desc_div.hide();
+                Modal.modal.modal("show");
+            });
             $("#board-menu-add-category").click(function() {
                 modalResource = CategoryPostJson("noname", "nodesc", 0);
                 modalSaveCallback = function() { // modal callback
@@ -1098,6 +1154,8 @@
                 Modal.title.html("Add a Category");
                 Modal.name_input.val("");
                 Modal.desc_input.val("");
+                Modal.name_input.show();
+                Modal.desc_div.show();
                 Modal.modal.modal("show");
             });
             $("#board-menu-add-section").click(function() {
@@ -1156,6 +1214,8 @@
                 Modal.title.html("Add a Section");
                 Modal.name_input.val("");
                 Modal.desc_input.val("");
+                Modal.name_input.show();
+                Modal.desc_div.show();
                 Modal.modal.modal("show");
             });
             $("#board-menu-add-list").click(function() {
@@ -1209,6 +1269,8 @@
                 Modal.title.html("Add a List");
                 Modal.name_input.val("");
                 Modal.desc_input.val("");
+                Modal.name_input.show();
+                Modal.desc_div.show();
                 Modal.modal.modal("show");
             });
 
@@ -1243,9 +1305,10 @@
 
     <div id="board-menu" class="position-fixed bottom-0 end-0 p-4">
         <div id="board-menu-items" class="m-4">
-            <button id="board-menu-add-category" type="button" class="board-menu-btn btn float-end">Add a category</button><br/><br/>
-            <button id="board-menu-add-section" type="button" class="board-menu-btn btn float-end">Add a section</button><br/><br/>
-            <button id="board-menu-add-list" type="button" class="board-menu-btn btn float-end">Add a list</button><br/><br/>
+            <button id="board-menu-change-bg" type="button" class="btn btn-success rounded-pill float-end">Change Background</button><br/><br/>
+            <button id="board-menu-add-category" type="button" class="btn btn-dark rounded-pill float-end">Add a category</button><br/><br/>
+            <button id="board-menu-add-section" type="button" class="btn btn-dark rounded-pill float-end">Add a section</button><br/><br/>
+            <button id="board-menu-add-list" type="button" class="btn btn-dark rounded-pill float-end">Add a list</button><br/><br/>
         </div>
         <br/>
         <button id="board-menu-show-btn" type="button" class="btn rounded-circle float-end"><i class="fas fa-plus"></i></button>
@@ -1275,7 +1338,7 @@
                         </div>
                         <div id="board-modal-image" class="mb-3">
                             <label for="board-modal-image-input" class="col-form-label">
-                                <i class="fas fa-align-left"></i> <b>Set card image</b>
+                                <i class="fas fa-align-left"></i> <b>Set image</b>
                             </label>
                             <input type="file" id="board-modal-image-input" accept="image/*"/>
                         </div>
