@@ -885,7 +885,7 @@
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
                     modalResource.order = parseInt(Modal.order_input.val());
-                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
+                    buildDOM(true);
                     apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function(data) {
                         moveResourceInArray(context, modalResource);
                         console.log("category edited");
@@ -915,8 +915,8 @@
                 modalSaveCallback = function() {
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
-                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
-                    apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
+                    buildDOM(true);
+                    apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function(){});
                     Modal.modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
@@ -943,8 +943,8 @@
                 modalSaveCallback = function() {
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
-                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
-                    apiPutResource(host + listsPath + "/" + modalResource._id, modalResource);
+                    buildDOM(true);
+                    apiPutResource(host + listsPath + "/" + modalResource._id, modalResource, function(){});
                     Modal.modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
@@ -976,13 +976,7 @@
                     modalResource.description = Modal.desc_input.val();
                     if (image_input.files && image_input.files[0]) {
                         modalResource.image = image_input.files[0];
-                        let reader = new FileReader();
-                        reader.onload = function (e) {
-                            $modalResourceDOM.find(".card-img-top").attr('src', e.target.result);
-                        }
-                        reader.readAsDataURL(image_input.files[0]);
                     }
-                    $modalResourceDOM.find(".card-body").html(modalResource.name);
                     apiPutResource(host + cardsPath + "/" + modalResource._id, modalResource, function(){});
                     buildDOM(true);
                     Modal.modal.modal("hide");
