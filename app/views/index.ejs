@@ -899,14 +899,18 @@
                 }
                 Modal.parent_div.hide();
                 Modal.image_div.hide();
-                Modal.order_div.show();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit Category");
                 Modal.name_input.val(modalResource.name);
-                Modal.desc_input.val(modalResource.description);
-                Modal.order_input.val(modalResource.order);
                 Modal.name_input.show();
+                Modal.desc_input.val(modalResource.description);
                 Modal.desc_div.show();
+                Modal.order_input.val(modalResource.order);
+                Modal.order_input.attr({
+                    "min": 0,
+                    "max": context.length - 1
+                });
+                Modal.order_div.show();
                 Modal.modal.modal("show");
             });
             $(".board-section-name").click(function() {
