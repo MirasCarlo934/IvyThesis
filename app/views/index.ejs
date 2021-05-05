@@ -15,12 +15,18 @@
             font-family: "Nunito", sans-serif;
         }
 
+        div.board-category {
+            min-width: 298px; /*section min width*/
+        }
         div.board-category-name {
             color: white;
             font-weight: lighter;
             letter-spacing: 2px;
+            cursor: pointer;
         }
-
+        div.board-category-name:hover {
+            color: #cccccc;
+        }
         div.board-category-name-line {
             width: 100%;
             border-bottom: 1px solid #000;
@@ -30,50 +36,65 @@
         div.board-section {
             background-color: rgba(255, 255, 255, 0.102);
             border-radius: 10px;
+            min-width: 298px; /*250 card width + 32 LR list pad + 16 R list margin*/
         }
         div.board-section-name {
             padding: 2px 16px 34px 16px;
             margin-bottom: -32px;
-            background-color: rgba(255, 255, 255, 0.502);
+            background-color: rgba(255, 255, 255, 0.55);
             border-radius: 10px;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            /*backdrop-filter: blur(4px);*/
+            /*-webkit-backdrop-filter: blur(4px);*/
 
             letter-spacing: 1.5px;
             font-size: small;
             font-weight: bold;
+            cursor: pointer;
+        }
+        div.board-section-name:hover {
+            background-color: rgba(255, 255, 255, 0.85);
         }
 
         div.board-list {
             background-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.16);
             border-radius: 10px;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            /*backdrop-filter: blur(4px);*/
+            /*-webkit-backdrop-filter: blur(4px);*/
         }
         div.board-list-name {
-            padding: 4px 16px 4px 16px;
             border-radius: 10px 10px 0 0;
             background-color: rgb(255, 255, 255);
-
+            cursor: pointer;
             font-size: large;
             font-weight: bold;
+            padding: 4px 16px 4px 16px;
+        }
+        div.board-list-name:hover {
+            background-color: #cccccc;
         }
 
         div.board-card {
             border-radius: 10px;
-            background-color: rgba(255, 255, 255, 0.6);
+            background-color: rgba(255, 255, 255, 0.85);
             box-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(4px);
+            cursor: pointer;
             -webkit-backdrop-filter: blur(4px);
+        }
+        div.board-card:hover {
+            background-color: #cccccc;
         }
 
         button.board-list-add-btn {
             border-radius: 10px;
-            background-color: rgba(255, 255, 255, 0.6);
+            background-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.25);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
+        }
+        button.board-list-add-btn:hover {
+            background-color: rgba(255, 255, 255, 0.85);
         }
 
         #board-modal-name-input, #board-modal-description-input {
@@ -90,9 +111,26 @@
             background-color: rgba(0, 0, 0, 0);
         }
 
+        .modal-title {
+            font-weight: bold !important;
+        }
         .modal-content {
             border-radius: 10px;
+            padding: 32px !important;
             background-color: rgb(255, 255, 255);
+        }
+        .modal-subdiv {
+            padding-left: 32px;
+        }
+        .modal-label {
+            font-weight: bold;
+        }
+        .modal-sublabel {
+            color: #7f7f7f;
+            letter-spacing: 1px !important;
+            font-size: small !important;
+            font-weight: bold !important;
+            text-transform: uppercase;
         }
 
         .card, .card-filler {
@@ -103,15 +141,28 @@
             padding: 8px 16px !important;
         }
 
-        .board-menu-btn {
-            border-width: 1px !important;
-            border-color: rgba(255, 255, 255, 0.6) !important;
-            border-style: solid !important;
-            border-radius: 20px !important;
-            background-color: rgb(0, 0, 0) !important;
+        .board-btn {
+            text-align: center;
+            font-size: small !important;
+            font-weight: bold !important;
+            letter-spacing: 1px !important;
+            transition: background-color 0.5s;
+        }
+        .board-btn-green {
+            background-color: #7aec6d !important;
             color: white !important;
         }
+        .board-btn-green:hover {
+            background-color: #62bf58 !important;
+        }
+        .board-btn-menu {
+            border: 1px solid white !important;
+            border-radius: 14px !important;
+        }
 
+        #board-menu {
+            z-index: 100;
+        }
         #board-menu-show-btn {
             background-color: rgb(255, 255, 255) !important;
             box-shadow: 0px 8px 12px 0px rgba(0, 0, 0, 0.25) !important;
@@ -167,6 +218,10 @@
         let modalParentContainerID; // the ID of the current parent container chosen
         let modalParentCategoryID;
         let modalParentSectionID;
+        let modalOrderCategoryState = {
+            label: "",
+            max: -1
+        };
         let modalSaveCallback = function(){}; // the callback function to be called by the modal save button
         let modalDeleteCallback = function(){}; // the callback function to be called by the modal delete button
         let modalParentChosenCallback = function() { // the callback function to be called when parent has been chosen from select
@@ -208,6 +263,33 @@
                     Modal.parent_section.hide();
                 }
             }
+            modalOrderCategoryState = {
+                label: "Horizontal Position: (0 is first)",
+                max: category.children.length + 1
+            }
+            Modal.order_label.html(modalOrderCategoryState.label);
+            Modal.order_input.attr({
+                "min": 0,
+                "max": modalOrderCategoryState.max
+            });
+            Modal.order_div.show();
+        };
+        let modalParentContainerChosenCallback = function() {
+            let container = getResourceRecursively(context, Modal.parent_container_sel.find("option:selected").val());
+            if (container) {
+                Modal.order_label.html("Vertical Position: (0 is first)");
+                Modal.order_input.attr({
+                    "min": 0,
+                    "max": container.children.length + 1
+                });
+            } else {
+                Modal.order_label.html(modalOrderCategoryState.label);
+                Modal.order_input.attr({
+                    "min": 0,
+                    "max": modalOrderCategoryState.max
+                });
+            }
+            Modal.order_div.show();
         };
 
         let OBJECTS;
@@ -258,6 +340,7 @@
             modal: $("#board-modal"),
             title: $("#board-modal").find("#board-modal-title"),
             order_div: $("#board-modal").find("#board-modal-order"),
+            order_label: $("#board-modal-order-label"),
             order_input: $("#board-modal").find("#board-modal-order-input"),
             name_input: $("#board-modal").find("#board-modal-name-input"),
             desc_div: $("#board-modal").find("#board-modal-description"),
@@ -682,15 +765,6 @@
                     // let margin_class = $last.attr("class").split(" ").pop();
                     // $last.removeClass(margin_class);
                 }
-                // $name.html("\
-                //     <div class='d-flex'> \
-                //         <div>\
-                //             " + container.name + "\
-                //         </div>\
-                //         <div class='board-category-name-line'>\
-                //         </div>\
-                //     </div>\
-                // ");
                 $name.html(container.name.toUpperCase());
                 $dom.append($name);
                 $dom.append($content);
@@ -710,8 +784,8 @@
                 });
                 if (section.children.length > 0) {
                     $name.css({
-                        "padding-bottom": "34px",
-                        "margin-bottom": "-32px"
+                        "padding-bottom": "37px",
+                        "margin-bottom": "-35px"
                     });
                 } else {
                     $name.css({
@@ -778,7 +852,8 @@
                     "type": "button",
                     "class": "board-list-add-btn btn"
                 });
-                $add_btn.html("<i class='fas fa-plus'></i>")
+                // $add_btn.html("<i class='fas fa-plus'></i>");
+                $add_btn.html("<img src='icons/plus.png' style='width:16px; height:16px'/>");
                 $add_btn_container.attr("class", "board-list-add-btn-div ui-state-disabled");
                 $add_btn_container.html($add_btn);
                 $content.append($filler);
@@ -911,14 +986,15 @@
                 }
                 Modal.parent_div.hide();
                 Modal.image_div.hide();
-                Modal.order_div.show();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit Category");
                 Modal.name_input.val(modalResource.name);
-                Modal.desc_input.val(modalResource.description);
-                Modal.order_input.val(modalResource.order);
                 Modal.name_input.show();
+                Modal.desc_input.val(modalResource.description);
                 Modal.desc_div.show();
+                Modal.order_label.html("Horizontal Position: (0 is first)");
+                Modal.order_input.val(modalResource.order);
+                Modal.order_div.show();
                 Modal.modal.modal("show");
             });
             $(".board-section-name").click(function() {
@@ -940,7 +1016,7 @@
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
-                Modal.order_div.show();
+                Modal.order_div.hide();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit Section");
                 Modal.name_input.val(modalResource.name);
@@ -969,13 +1045,15 @@
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
-                Modal.order_div.show();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit List");
                 Modal.name_input.val(modalResource.name);
-                Modal.desc_input.val(modalResource.description);
                 Modal.name_input.show();
+                Modal.desc_input.val(modalResource.description);
                 Modal.desc_div.show();
+                Modal.order_label.html("Horizontal Position: (0 is first)");
+                Modal.order_input.val(modalResource.order);
+                Modal.order_div.show();
                 Modal.modal.modal("show");
             });
             $(".board-card").click(function() {
@@ -1042,6 +1120,7 @@
                 modal: $("#board-modal"),
                 title: $("#board-modal").find("#board-modal-title"),
                 order_div: $("#board-modal").find("#board-modal-order"),
+                order_label: $("#board-modal-order-label"),
                 order_input: $("#board-modal").find("#board-modal-order-input"),
                 name_input: $("#board-modal").find("#board-modal-name-input"),
                 desc_div: $("#board-modal").find("#board-modal-description"),
@@ -1225,7 +1304,7 @@
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
                 Modal.image_div.hide();
-                Modal.order_div.show();
+                Modal.order_div.hide();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a Section");
                 Modal.name_input.val("");
@@ -1280,7 +1359,7 @@
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
                 Modal.image_div.hide();
-                Modal.order_div.show();
+                Modal.order_div.hide();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a List");
                 Modal.name_input.val("");
@@ -1321,13 +1400,16 @@
 
     <div id="board-menu" class="position-fixed bottom-0 end-0 p-4">
         <div id="board-menu-items" class="m-4">
-            <button id="board-menu-change-bg" type="button" class="btn btn-success rounded-pill float-end">Change Background</button><br/><br/>
-            <button id="board-menu-add-category" type="button" class="btn btn-dark rounded-pill float-end">Add a category</button><br/><br/>
-            <button id="board-menu-add-section" type="button" class="btn btn-dark rounded-pill float-end">Add a section</button><br/><br/>
-            <button id="board-menu-add-list" type="button" class="btn btn-dark rounded-pill float-end">Add a list</button><br/><br/>
+            <button id="board-menu-change-bg" type="button" class="btn board-btn-menu board-btn-green float-end">Change Background</button><br/><br/>
+            <button id="board-menu-add-category" type="button" class="btn board-btn-menu btn-dark float-end">Add a Category</button><br/><br/>
+            <button id="board-menu-add-section" type="button" class="btn board-btn-menu btn-dark float-end">Add a Section</button><br/><br/>
+            <button id="board-menu-add-list" type="button" class="btn board-btn-menu btn-dark float-end">Add a List</button><br/><br/>
         </div>
         <br/>
-        <button id="board-menu-show-btn" type="button" class="btn rounded-circle float-end"><i class="fas fa-plus"></i></button>
+        <button id="board-menu-show-btn" type="button" style="width:64px;height:64px" class="btn rounded-circle float-end">
+<!--            <i class="fas fa-plus"></i>-->
+            <img src="icons/plus.png" style="width:32px"/>
+        </button>
     </div>
 
 <!--    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#board-modal" data-bs-whatever="@mdo">Open modal for @mdo</button>-->
@@ -1337,7 +1419,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="board-modal-title">NO TITLE</h5>
+                    <h4 class="modal-title" id="board-modal-title">NO TITLE</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -1347,27 +1429,23 @@
                             <input type="text" class="form-control modal-text-input" id="board-modal-name-input" placeholder="Name">
                         </div>
                         <div id="board-modal-description" class="mb-3">
-                            <label for="board-modal-description-input" class="col-form-label">
-                                <i class="fas fa-align-left"></i> <b>Description</b>
+                            <label for="board-modal-description-input" class="modal-label col-form-label">
+<!--                                <i class="fas fa-align-left"></i> -->
+                                <img src="icons/description.svg" style="width:16px;"/>
+                                <b>Description</b>
                             </label>
                             <textarea class="form-control modal-text-input" id="board-modal-description-input" rows="5"></textarea>
                         </div>
                         <div id="board-modal-image" class="mb-3">
-                            <label for="board-modal-image-input" class="col-form-label">
-                                <i class="fas fa-align-left"></i> <b>Set image</b>
+                            <label for="board-modal-image-input" class="modal-label col-form-label">
+                                <img src="icons/description.svg" style="width:16px;"/> <b>Set image</b>
                             </label>
                             <input type="file" id="board-modal-image-input" accept="image/*"/>
                         </div>
                         <div id="board-modal-parent" class="mb-3">
-                            <label class="col-form-label"><b>Place under</b></label>
-<!--                            <select id="board-modal-parent-menu" class="form-select modal-parent-menu" aria-label="Default select example">-->
-<!--                                <option selected>Choose</option>-->
-<!--                                <option value="1">One</option>-->
-<!--                                <option value="2">Two</option>-->
-<!--                                <option value="3">Three</option>-->
-<!--                            </select>-->
-                            <div id="board-modal-parent-category">
-                                <label class="col-form-label">Category</label>
+                            <label class="modal-label col-form-label"><b>Place under</b></label>
+                            <div id="board-modal-parent-category" class="modal-subdiv">
+                                <label class="modal-sublabel col-form-label">Category</label>
                                 <select id="board-modal-parent-category-select" class="form-select modal-parent-menu" aria-label="Default select example">
                                     <option selected>Choose</option>
                                     <option value="1">One</option>
@@ -1375,8 +1453,8 @@
                                     <option value="3">Three</option>
                                 </select>
                             </div>
-                            <div id="board-modal-parent-container">
-                                <label class="col-form-label">In section column</label>
+                            <div id="board-modal-parent-container" class="modal-subdiv">
+                                <label class="modal-sublabel col-form-label">In section column</label>
                                 <select id="board-modal-parent-container-select" class="form-select modal-parent-menu" aria-label="Default select example">
                                     <option selected>Choose</option>
                                     <option value="1">One</option>
@@ -1384,8 +1462,8 @@
                                     <option value="3">Three</option>
                                 </select>
                             </div>
-                            <div id="board-modal-parent-section">
-                                <label class="col-form-label">Section</label>
+                            <div id="board-modal-parent-section" class="modal-subdiv">
+                                <label class="modal-sublabel col-form-label">Section</label>
                                 <select id="board-modal-parent-section-select" class="form-select modal-parent-menu" aria-label="Default select example">
                                     <option selected>Choose</option>
                                     <option value="1">One</option>
@@ -1395,14 +1473,16 @@
                             </div>
                         </div>
                         <div id="board-modal-order" class="mb-3">
-                            <label for="board-modal-order-input" class="col-form-label">Position: (0 is first)</label>
+                            <label id="board-modal-order-label" for="board-modal-order-input" class="modal-label col-form-label">
+                                Horizontal Position: (0 is first)
+                            </label>
                             <input type="number" class="form-control" id="board-modal-order-input"/>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" id="board-modal-delete-btn">Delete</button>
-                    <button type="button" class="btn btn-primary" id="board-modal-save-btn">Save</button>
+                    <button type="button" class="btn board-btn btn-danger" id="board-modal-delete-btn">DELETE</button>
+                    <button type="button" class="btn board-btn board-btn-green" id="board-modal-save-btn">SAVE</button>
                 </div>
             </div>
         </div>
