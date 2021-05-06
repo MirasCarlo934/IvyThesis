@@ -242,7 +242,8 @@
                     let sel_html = "<option value='none' selected>(Just in current category)</option>";
                     for (let i = 0; i < containers.length; i++) {
                         let parent = containers[i];
-                        sel_html += "<option value=" + parent._id + ">" + (parent.index+1) + "</option>";
+                        let first_section = parent.children[0];
+                        sel_html += "<option value=" + parent._id + ">" + first_section.name + "</option>";
                     }
                     Modal.parent_container_sel.html(sel_html);
                     Modal.parent_container.show();
@@ -778,7 +779,7 @@
                 // DOM setup
                 $dom.attr({
                     "id": category._id,
-                    "class": "board-category main me-5"
+                    "class": "board-category me-5"
                 });
                 $name.attr({
                     "id": category._id + "-" + "name",
@@ -815,7 +816,7 @@
                 // DOM setup
                 $dom.attr({
                     "id": section._id,
-                    "class": "board-section main mb-4"
+                    "class": "board-section mb-4"
                 });
                 $name.attr({
                     "id": section._id + "-" + "name",
@@ -834,7 +835,7 @@
                 }
                 $content.attr({
                     "id": section._id + "-" + "content",
-                    // "class": "layout d-table-cell board-section-sortable"
+                    // "class": "layout d-table board-section-sortable"
                     "class": "layout d-inline-flex board-section-sortable"
                 });
                 // build children
@@ -850,7 +851,8 @@
                 // DOM setup
                 $dom.attr({
                     "id": container._id,
-                    "class": "board-container bg-transparent d-inline-flex flex-column layout ui-state-disabled board-container-sortable me-4"
+                    // "class": "board-container bg-transparent d-inline-flex flex-column layout ui-state-disabled board-container-sortable me-4"
+                    "class": "board-container bg-transparent d-table-row layout ui-state-disabled board-container-sortable me-4"
                 });
                 // build children
                 for (let i = 0; i < container.children.length; i++) {
@@ -1475,7 +1477,7 @@
 <!--    <img src="img/testimg.png" alt="Test"/>-->
 <body class="bg-transparent">
 <img id="testimg"/>
-<div class="layout-body container-fluid">
+<div class="layout-body">
 
     <div id="board-menu" class="position-fixed bottom-0 end-0 p-4">
         <div id="board-menu-items" class="m-4">
@@ -1567,7 +1569,7 @@
         </div>
     </div>
 
-    <div id="board" class="layout-board layout">
+    <div id="board" class="d-flex">
 <!--        <div class="descriptor">I am a board</div><br/>-->
         <div id="board-content" class="d-flex p-2 layout content board-sortable">
             <div class="category mr-5 main">
