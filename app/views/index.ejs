@@ -265,7 +265,7 @@
             }
             modalOrderCategoryState = {
                 label: "Horizontal Position: (0 is first)",
-                max: category.children.length + 1
+                max: category.children.length
             }
             Modal.order_label.html(modalOrderCategoryState.label);
             Modal.order_input.attr({
@@ -280,7 +280,7 @@
                 Modal.order_label.html("Vertical Position: (0 is first)");
                 Modal.order_input.attr({
                     "min": 0,
-                    "max": container.children.length + 1
+                    "max": container.children.length
                 });
             } else {
                 Modal.order_label.html(modalOrderCategoryState.label);
@@ -1159,6 +1159,9 @@
             });
             $("#board-modal-parent-category-select").on("change", function() {
                 modalParentCategoryChosenCallback();
+            });
+            $("#board-modal-parent-container-select").on("change", function() {
+                modalParentContainerChosenCallback();
             });
             $("#board-menu-show-btn").click(function() {
                 let d = 45;
