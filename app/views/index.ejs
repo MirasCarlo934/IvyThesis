@@ -272,6 +272,7 @@
                 "min": 0,
                 "max": modalOrderCategoryState.max
             });
+            Modal.order_input.val(0);
             Modal.order_div.show();
         };
         let modalParentContainerChosenCallback = function() {
@@ -289,6 +290,7 @@
                     "max": modalOrderCategoryState.max
                 });
             }
+            Modal.order_input.val(0);
             Modal.order_div.show();
         };
         let modalParentSectionChosenCallback = function() {
@@ -306,6 +308,7 @@
                     "max": modalOrderCategoryState.max
                 });
             }
+            Modal.order_input.val(0);
             Modal.order_div.show();
         };
 
@@ -1029,7 +1032,9 @@
                     deleteResourceRecursively(context, modalResource._id);
                     Modal.modal.modal("hide");
                 }
+                let category_sel_html = buildCategorySelectorHTML();
                 Modal.parent_div.show();
+                Modal.parent_category_sel.html(category_sel_html);
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
@@ -1037,9 +1042,10 @@
                 Modal.delete_btn.show();
                 Modal.title.html("Edit Section");
                 Modal.name_input.val(modalResource.name);
-                Modal.desc_input.val(modalResource.description);
                 Modal.name_input.show();
+                Modal.desc_input.val(modalResource.description);
                 Modal.desc_div.show();
+                Modal.image_div.hide();
                 Modal.modal.modal("show");
             });
             $(".board-list-name").click(function() {
@@ -1057,8 +1063,11 @@
                     deleteResourceRecursively(context, modalResource._id);
                     Modal.modal.modal("hide");
                 }
+
+                let category_sel_html = buildCategorySelectorHTML();
                 Modal.parent_div.show();
                 Modal.image_div.hide();
+                Modal.parent_category_sel.html(category_sel_html);
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
