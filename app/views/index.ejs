@@ -291,6 +291,23 @@
             }
             Modal.order_div.show();
         };
+        let modalParentSectionChosenCallback = function() {
+            let section = getResourceRecursively(context, Modal.parent_section_sel.find("option:selected").val());
+            if (section) {
+                Modal.order_label.html("Horizontal Position: (0 is first)");
+                Modal.order_input.attr({
+                    "min": 0,
+                    "max": section.children.length
+                });
+            } else {
+                Modal.order_label.html(modalOrderCategoryState.label);
+                Modal.order_input.attr({
+                    "min": 0,
+                    "max": modalOrderCategoryState.max
+                });
+            }
+            Modal.order_div.show();
+        };
 
         let OBJECTS;
 
@@ -1161,7 +1178,10 @@
                 modalParentCategoryChosenCallback();
             });
             $("#board-modal-parent-container-select").on("change", function() {
-                modalParentContainerChosenCallback();
+                modalParentContainerChosenCallback()
+            });
+            $("#board-modal-parent-section-select").on("change", function() {
+                modalParentSectionChosenCallback();
             });
             $("#board-menu-show-btn").click(function() {
                 let d = 45;
