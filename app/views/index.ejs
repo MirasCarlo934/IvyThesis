@@ -3,6 +3,7 @@
 
 <head>
     <title/>IvyThesis</title>
+    <!-- Latest compiled and minified CSS -->
     <style>
         html {
             background: url(img/background.jpg) no-repeat center center fixed;
@@ -33,17 +34,21 @@
             border-bottom: 1px solid #000;
             line-height: 0.1em;
         }
+        .board-category-title-hr {
+            border: 1px solid white;
+            opacity: 0.85;
+        }
 
         div.board-section {
             background-color: rgba(255, 255, 255, 0.102);
-            border-radius: 10px;
+            border-radius: 8px;
             min-width: 298px; /*250 card width + 32 LR list pad + 16 R list margin*/
         }
         div.board-section-name {
             padding: 2px 16px 34px 16px;
             margin-bottom: -32px;
             background-color: rgba(255, 255, 255, 0.55);
-            border-radius: 10px;
+            border-radius: 8px;
             /*backdrop-filter: blur(4px);*/
             /*-webkit-backdrop-filter: blur(4px);*/
 
@@ -58,14 +63,27 @@
         }
 
         div.board-list {
+            /*position: relative !important;*/
             background-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.16);
-            border-radius: 10px;
+            border-radius: 8px;
             /*backdrop-filter: blur(4px);*/
             /*-webkit-backdrop-filter: blur(4px);*/
+            /*z-index: 0 !important;*/
         }
+        /*div.board-list::before {*/
+        /*    content: '';*/
+        /*    margin: -500px;*/
+        /*    position: relative;*/
+        /*    top: 0;*/
+        /*    right: 0;*/
+        /*    bottom: 0;*/
+        /*    left: 0;*/
+        /*    filter: blur(20px);*/
+        /*    z-index: 1;*/
+        /*}*/
         div.board-list-name {
-            border-radius: 10px 10px 0 0;
+            border-radius: 8px 8px 0 0;
             background-color: rgb(255, 255, 255);
             cursor: pointer;
             font-size: large;
@@ -75,21 +93,33 @@
         div.board-list-name:hover {
             background-color: #cccccc;
         }
+        div.board-list-content {
+            position: relative !important;
+            z-index: 100 !important;
+        }
+        div.board-list-background {
+            position: relative;
+            filter: blur(20px);
+            z-index: -1;
+        }
 
         div.board-card {
-            border-radius: 10px;
+            /*position: relative !important;*/
+            border-radius: 8px;
             background-color: rgba(255, 255, 255, 0.85);
             box-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(4px);
             cursor: pointer;
+            padding: 4px 4px !important;
+            backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
+            /*z-index: 1000 !important;*/
         }
         div.board-card:hover {
             background-color: #cccccc;
         }
 
         button.board-list-add-btn {
-            border-radius: 10px;
+            border-radius: 8px;
             background-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.25);
             backdrop-filter: blur(4px);
@@ -163,7 +193,7 @@
         }
 
         #board-menu {
-            z-index: 100;
+            z-index: 9999999999999;
         }
         #board-menu-show-btn {
             background-color: rgb(255, 255, 255) !important;
@@ -174,8 +204,7 @@
         /*    height: 1px;*/
         /*}*/
     </style>
-    <!-- Latest compiled and minified CSS -->
-<!--    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">-->
+    <!--    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
 
     <!-- Fonts -->
@@ -784,7 +813,7 @@
                 });
                 $name.attr({
                     "id": category._id + "-" + "name",
-                    "class": "board-category-name mb-4 ui-state-disabled"
+                    "class": "board-category-name ui-state-disabled"
                 });
                 $content.attr({
                     "id": category._id + "-" + "content",
@@ -808,6 +837,7 @@
                 }
                 $name.html(category.name.toUpperCase());
                 $dom.append($name);
+                $dom.append("<hr class='board-category-title-hr mb-4'/>")
                 $dom.append($content);
             } else if (resource.resourceType === "section") {
                 let section = resource;
@@ -864,6 +894,7 @@
                 let list = resource;
                 let $name = $("<div></div>");
                 let $content = $("<div></div>");
+                let $background = $("<div></div>")
                 // let $dom_class = "board-list d-inline-flex flex-column";
                 let $dom_class = "board-list d-table";
                 let $last;
@@ -882,8 +913,11 @@
                 });
                 $content.attr({
                     "id": list._id + "-" + "content",
-                    "class": "p-3 d-table ui-state-disabled board-list-sortable",
+                    "class": "board-list-content p-3 d-table ui-state-disabled board-list-sortable",
                     // "class": "p-3 d-inline-flex flex-column ui-state-disabled board-list-sortable"
+                });
+                $background.attr({
+                    "class": "board-list-background"
                 });
                 // add add_btn
                 let $filler = $("<div class='card-filler'></div>");
@@ -905,6 +939,7 @@
                     let res = list.children[i];
                     $last = buildResourceDOM(res, $content,  "y", layout_layer + 1);
                 }
+                $background.append($content);
                 $name.html(list.name);
                 $dom.append($name);
                 $dom.append($content);
@@ -935,7 +970,9 @@
                 $body.html(card.name);
                 if (card.hasOwnProperty("description") && card.description.length > 0) {
                     // $footer.html("<i class='fas fa-align-left'></i>");
-                    $body.append("<div class='ui-state-disabled' style='width:100%;height:8px;'></div><i class='fas fa-align-left'></i>");
+                    // $body.append("<div class='ui-state-disabled' style='width:100%;height:8px;'></div><i class='fas fa-align-left'></i>");
+                    $body.append("<div class='ui-state-disabled' style='width:100%;height:4px;'></div>" +
+                        "<img class='ui-state-disabled' src='icons/description.svg' style='width:16px'/>");
                 }
                 $dom.append($img);
                 $dom.append($body);
@@ -951,7 +988,7 @@
             let categories = getResourcesRecursively(context, "category");
             let category_sel_html
             if (isList) {
-                category_sel_html = "<option value='none' selected>(Just on board)</option>";
+                category_sel_html = "<option value='board' selected>(Just on board)</option>";
             } else {
                 category_sel_html = "<option value='none' selected>Choose</option>";
             }
@@ -1134,10 +1171,9 @@
                     Modal.modal.modal("hide");
                 }
 
-                let category_sel_html = buildCategorySelectorHTML();
                 Modal.parent_div.show();
                 Modal.image_div.hide();
-                Modal.parent_category_sel.html(category_sel_html);
+                Modal.parent_category_sel.html(buildCategorySelectorHTML(true));
                 Modal.parent_category.show();
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
@@ -1148,7 +1184,11 @@
                 Modal.desc_input.val(modalResource.description);
                 Modal.desc_div.show();
                 Modal.order_label.html("Horizontal Position: (0 is first)");
-                Modal.order_input.val(modalResource.order);
+                Modal.order_input.attr({
+                    "min": 0,
+                    "max": context.length
+                })
+                Modal.order_input.val(0);
                 Modal.order_div.show();
                 Modal.modal.modal("show");
             });
@@ -1198,6 +1238,12 @@
                 connectWith: ".board-list-sortable",
                 placeholder: "card-placeholder mb-3",
                 forcePlaceholderSize: true,
+                // zIndex: 1,
+                // start: function(event, ui) {
+                //     $(".board-card").css("z-index", 1000);
+                //     $(".board-list").css("z-index", 1);
+                //     console.debug($(".board-card").css("z-index") + " - " + $(".board-list-content").css("z-index"))
+                // },
                 receive: function(event, ui) {
                     let resource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                     resource.updateChildren($(this).children());
@@ -1347,6 +1393,7 @@
                 Modal.parent_div.hide();
                 Modal.image_div.hide();
                 Modal.order_input.show();
+                Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a Category");
                 Modal.name_input.val("");
@@ -1461,7 +1508,11 @@
                 Modal.parent_container.hide();
                 Modal.parent_section.hide();
                 Modal.image_div.hide();
-                Modal.order_div.hide();
+                Modal.order_input.attr({
+                    "min": 0,
+                    "max": context.length
+                });
+                Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a List");
                 Modal.name_input.val("");
