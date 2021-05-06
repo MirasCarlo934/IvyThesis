@@ -26,6 +26,7 @@
         }
         div.board-category-name:hover {
             color: #cccccc;
+            text-transform: capitalize;
         }
         div.board-category-name-line {
             width: 100%;
@@ -50,6 +51,7 @@
             font-size: small;
             font-weight: bold;
             cursor: pointer;
+            text-transform: capitalize;
         }
         div.board-section-name:hover {
             background-color: rgba(255, 255, 255, 0.85);
@@ -391,16 +393,12 @@
             let lastOrder = -1;
             for (let i = 0; i < resourceArr.length; i++) {
                 let res = resourceArr[i];
-                console.debug("before");
-                console.debug(res);
                 if (lastOrder === res.order) { // resource has been added, increment
                     res.order = res.order + 1;
                 } else if (res.order - lastOrder > 1) { // resource has been deleted, decrement
                     res.order = res.order - 1;
                 }
                 lastOrder = res.order;
-                console.debug("after");
-                console.debug(res);
             }
             resourceArr.sort(sortFunc);
         }
@@ -645,6 +643,27 @@
             }
             resourceArr.splice(resource.order, 0, resource);
             updateResourceOrdersInArr(resourceArr);
+            deleteEmptyContainersRecursively();
+            buildDOM(true);
+            setupJquery();
+            apiUpdateResources();
+        }
+
+        function moveResourceBetweenParents(srcParentId, destParentId, resourceId) {
+            let src = getResourceRecursively(context, srcParentId);
+            let dest = getResourceRecursively(context, destParentId);
+            let resource = getResourceRecursively(context, resourceId);
+            for (let i = 0; i < src.children.length; i++) {
+                let res = src.children[i];
+                if (res._id === resource._id) {
+                    src.children.splice(i, 1);
+                    updateResourceOrdersInArr(src.children);
+                    break;
+                }
+            }
+            dest.children.splice(resource.order, 0, resource);
+            updateResourceOrdersInArr(dest.children);
+            deleteEmptyContainersRecursively();
             buildDOM(true);
             setupJquery();
             apiUpdateResources();
@@ -752,30 +771,30 @@
             let $dom = $("<div></div>");
 
             if (resource.resourceType === "category") {
-                let container = resource;
+                let category = resource;
                 let $name = $("<div></div>");
                 let $content = $("<div></div>");
                 let $last;
                 // DOM setup
                 $dom.attr({
-                    "id": container._id,
+                    "id": category._id,
                     "class": "board-category main me-5"
                 });
                 $name.attr({
-                    "id": container._id + "-" + "name",
+                    "id": category._id + "-" + "name",
                     "class": "board-category-name mb-4 ui-state-disabled"
                 });
                 $content.attr({
-                    "id": container._id + "-" + "content",
+                    "id": category._id + "-" + "content",
                     "class": "layout d-inline-flex ui-state-disabled board-category-sortable"
                 });
                 // build children
-                for (let i = 0; i < container.children.length; i++) {
-                    let res = container.children[i];
-                    $last = buildResourceDOM(res, $content,  container.orientation, layout_layer + 1);
+                for (let i = 0; i < category.children.length; i++) {
+                    let res = category.children[i];
+                    $last = buildResourceDOM(res, $content,  category.orientation, layout_layer + 1);
                 }
 
-                if (container.children.length === 0) {
+                if (category.children.length === 0) {
                     // add filler to preserve size
                     // let $filler = $("<div></div>");
                     // $filler.attr("class", "card-filler ui-state-disabled");
@@ -785,7 +804,7 @@
                     // let margin_class = $last.attr("class").split(" ").pop();
                     // $last.removeClass(margin_class);
                 }
-                $name.html(container.name.toUpperCase());
+                $name.html(category.name.toUpperCase());
                 $dom.append($name);
                 $dom.append($content);
             } else if (resource.resourceType === "section") {
@@ -992,7 +1011,6 @@
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
                     modalResource.order = parseInt(Modal.order_input.val());
-                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
                     apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function(data) {
                         moveResourceInArray(context, modalResource);
                         console.log("category edited");
@@ -1021,10 +1039,39 @@
                 modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
+                    let parentId;
+                    let parentRes;
+                    let order = parseInt(Modal.order_input.val());
+                    if (Modal.parent_container.is(":visible") && Modal.parent_container_sel.find("option:selected").val() !== "none") {
+                        parentId = Modal.parent_container_sel.find("option:selected").val();
+                    } else {
+                        parentId = Modal.parent_category_sel.find("option:selected").val();
+                    }
+                    parentRes = getResourceRecursively(context, parentId);
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
-                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
-                    apiPutResource(host + containersPath + "/" + modalResource._id, modalResource);
+                    modalResource.order = order;
+                    if (parentRes.resourceType === "category") {
+                        // add container first
+                        let containerRes = buildResourceObj(buildNewContainerResource(parentId, order), "container");
+                        modalResource.order = 0;
+                        apiPostResource(host + containersPath, containerRes, function(containerData) {
+                            addResourceToArray(parentRes.children, containerData);
+                            console.log("new container added");
+                            // move section to container
+                            apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function(sectionData) {
+                                moveResourceBetweenParents(modalResource.parentId, containerRes._id, modalResource._id);
+                                console.log("section edited");
+                            });
+                        });
+                    } else {
+                        // move section to existing container
+                        apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function() {
+                            moveResourceBetweenParents(modalResource.parentId, parentId, modalResource._id);
+                            console.log("section edited");
+                        });
+                    }
+                    modalResource.parentId = parentId;
                     Modal.modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
@@ -1291,7 +1338,7 @@
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new section");
                     let parentId;
-                    if (Modal.parent_container.is(":visible")) {
+                    if (Modal.parent_container.is(":visible") && Modal.parent_container_sel.find("option:selected").val !== "none") {
                         parentId = Modal.parent_container_sel.find("option:selected").val();
                     } else {
                         parentId = Modal.parent_category_sel.find("option:selected").val();
