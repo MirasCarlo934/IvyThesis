@@ -764,6 +764,7 @@
                 for (let i = 0; i < context.length; i++) {
                     $last = buildResourceDOM(context[i], $board_content, "x", 0);
                 }
+                deleteEmptyContainersRecursively();
             }
             setupJquery();
         }
@@ -1022,6 +1023,7 @@
                 modalDeleteCallback = function() {
                     $modalResourceDOM.remove();
                     deleteResourceRecursively(context, modalResource._id);
+                    buildDOM(true);
                     Modal.modal.modal("hide");
                 }
                 Modal.parent_div.hide();
@@ -1041,44 +1043,51 @@
                 modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
-                    let parentId;
+                    let currentParentId = modalResource.parentId;
+                    let newParentId = "none";
                     let parentRes;
                     let order = parseInt(Modal.order_input.val());
                     if (Modal.parent_container.is(":visible") && Modal.parent_container_sel.find("option:selected").val() !== "none") {
-                        parentId = Modal.parent_container_sel.find("option:selected").val();
-                    } else {
-                        parentId = Modal.parent_category_sel.find("option:selected").val();
+                        newParentId = Modal.parent_container_sel.find("option:selected").val();
+                    } else if (Modal.parent_category_sel.find("option:selected").val() !== "none") {
+                        newParentId = Modal.parent_category_sel.find("option:selected").val();
                     }
-                    parentRes = getResourceRecursively(context, parentId);
+                    parentRes = getResourceRecursively(context, newParentId);
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
+                    modalResource.parentId = newParentId;
                     modalResource.order = order;
-                    if (parentRes.resourceType === "category") {
-                        // add container first
-                        let containerRes = buildResourceObj(buildNewContainerResource(parentId, order), "container");
-                        modalResource.order = 0;
-                        apiPostResource(host + containersPath, containerRes, function(containerData) {
-                            addResourceToArray(parentRes.children, containerData);
-                            console.log("new container added");
-                            // move section to container
-                            apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function(sectionData) {
-                                moveResourceBetweenParents(modalResource.parentId, containerRes._id, modalResource._id);
-                                console.log("section edited");
+                    if (newParentId !== "none") {
+                        if (parentRes.resourceType === "category") {
+                            // add container first
+                            let containerRes = buildResourceObj(buildNewContainerResource(newParentId, order), "container");
+                            modalResource.order = 0;
+                            apiPostResource(host + containersPath, containerRes, function(containerData) {
+                                addResourceToArray(parentRes.children, containerData);
+                                console.log("new container added");
+                                // move section to container
+                                apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function(sectionData) {
+                                    moveResourceBetweenParents(currentParentId, containerRes._id, modalResource._id);
+                                });
                             });
-                        });
+                        } else {
+                            // move section to existing container
+                            apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function() {
+                                moveResourceBetweenParents(modalResource.parentId, newParentId, modalResource._id);
+                            });
+                        }
                     } else {
-                        // move section to existing container
                         apiPutResource(host + containersPath + "/" + modalResource._id, modalResource, function() {
-                            moveResourceBetweenParents(modalResource.parentId, parentId, modalResource._id);
-                            console.log("section edited");
+                            buildDOM(true);
                         });
                     }
-                    modalResource.parentId = parentId;
+                    console.log("section edited");
                     Modal.modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
                     $modalResourceDOM.remove();
                     deleteResourceRecursively(context, modalResource._id);
+                    buildDOM(true);
                     Modal.modal.modal("hide");
                 }
                 let category_sel_html = buildCategorySelectorHTML();
@@ -1101,15 +1110,27 @@
                 modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
+                    let currentParentId = modalResource.parentId;
+                    let newParentId = "none";
+                    let order = parseInt(Modal.order_input.val());
+                    if (Modal.parent_section.is(":visible") && Modal.parent_section_sel.find("option:selected").val() !== "none") {
+                        newParentId = Modal.parent_section_sel.find("option:selected").val();
+                    } else if (Modal.parent_category_sel.find("option:selected").val() !== "none") {
+                        newParentId = Modal.parent_category_sel.find("option:selected").val();
+                    }
                     modalResource.name = Modal.name_input.val();
                     modalResource.description = Modal.desc_input.val();
-                    $modalResourceDOM.find("#" + modalResource._id + "-name").html(modalResource.name);
-                    apiPutResource(host + listsPath + "/" + modalResource._id, modalResource);
+                    modalResource.parentId = newParentId;
+                    modalResource.order = order;
+                    apiPutResource(host + listsPath + "/" + modalResource._id, modalResource, function(listData) {
+                        moveResourceBetweenParents(currentParentId, newParentId, modalResource._id);
+                    });
                     Modal.modal.modal("hide");
                 }
                 modalDeleteCallback = function() {
                     $modalResourceDOM.remove();
                     deleteResourceRecursively(context, modalResource._id);
+                    buildDOM(true);
                     Modal.modal.modal("hide");
                 }
 
@@ -1477,7 +1498,7 @@
 <!--    <img src="img/testimg.png" alt="Test"/>-->
 <body class="bg-transparent">
 <img id="testimg"/>
-<div class="layout-body">
+<div class="layout-body container-fluid">
 
     <div id="board-menu" class="position-fixed bottom-0 end-0 p-4">
         <div id="board-menu-items" class="m-4">
@@ -1572,122 +1593,123 @@
     <div id="board" class="d-flex">
 <!--        <div class="descriptor">I am a board</div><br/>-->
         <div id="board-content" class="d-flex p-2 layout content board-sortable">
-            <div class="category mr-5 main">
-                <div class="mb-4 descriptor">PENDING</div>
-                <div class="list main">
-                    <div class="mb-3 descriptor">Incoming bugs</div>
-                    <div class="p-3 layout">
-                        <div class="card p-2 mb-3 main">
-                            <div class="card-body">Lightbox loading issue on Safari</div>
-                            <div class="card-footer"><i>*logos/indicators*</i></div>
-                        </div>
-                        <div class="card p-2 mb-3 main">
-                            <div class="card-body">Notifications Not Sending #4</div>
-                            <div class="card-footer"><i>*logos/indicators*</i></div>
-                        </div>
-                        <div class="card p-2 mb-3 main">
-                            <div class="card-body">Tab to comment goes to wrong field</div>
-                            <div class="card-footer"><i>*logos/indicators*</i></div>
-                        </div>
-                        <div class="card p-2 mb-3 main">
-                            <div class="card-body">Video load issues on IE 11</div>
-                            <div class="card-footer"><i>*logos/indicators*</i></div>
-                        </div>
-                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
-                    </div>
-                </div>
-            </div>
 
-            <div class="category mr-5 main">
-                <div class="mb-4 descriptor">STARTED</div>
-                <div class="d-flex flex-column">
-                    <div class="section mb-4 main">
-                        <div class="descriptor">SMALLER WORK - <48 HR RESOLUTION</div>
-                        <div class="d-flex">
+<!--            <div class="category mr-5 main">-->
+<!--                <div class="mb-4 descriptor">PENDING</div>-->
+<!--                <div class="list main">-->
+<!--                    <div class="mb-3 descriptor">Incoming bugs</div>-->
+<!--                    <div class="p-3 layout">-->
+<!--                        <div class="card p-2 mb-3 main">-->
+<!--                            <div class="card-body">Lightbox loading issue on Safari</div>-->
+<!--                            <div class="card-footer"><i>*logos/indicators*</i></div>-->
+<!--                        </div>-->
+<!--                        <div class="card p-2 mb-3 main">-->
+<!--                            <div class="card-body">Notifications Not Sending #4</div>-->
+<!--                            <div class="card-footer"><i>*logos/indicators*</i></div>-->
+<!--                        </div>-->
+<!--                        <div class="card p-2 mb-3 main">-->
+<!--                            <div class="card-body">Tab to comment goes to wrong field</div>-->
+<!--                            <div class="card-footer"><i>*logos/indicators*</i></div>-->
+<!--                        </div>-->
+<!--                        <div class="card p-2 mb-3 main">-->
+<!--                            <div class="card-body">Video load issues on IE 11</div>-->
+<!--                            <div class="card-footer"><i>*logos/indicators*</i></div>-->
+<!--                        </div>-->
+<!--                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
-                            <!-- TESTING FOR DRAGGABLES -->
+<!--            <div class="category mr-5 main">-->
+<!--                <div class="mb-4 descriptor">STARTED</div>-->
+<!--                <div class="d-flex flex-column">-->
+<!--                    <div class="section mb-4 main">-->
+<!--                        <div class="descriptor">SMALLER WORK - <48 HR RESOLUTION</div>-->
+<!--                        <div class="d-flex">-->
 
-                            <div class="list mr-3 main">
-                                <div class="mb-3 descriptor">In Progress</div>
-                                <div class="p-3 layout sortable">
-                                    <div class="card p-2 mb-3 main">
-                                        <div class="card-body ui-state-disabled">Localization</div>
-                                        <div class="card-footer ui-state-disabled"><i>*logos/indicators*</i></div>
-                                    </div>
-                                    <div class="card p-2 mb-3 main">
-                                        <img class="card-img-top ui-state-disabled" src="img/testimg.png"/>
-                                        <div class="card-body ui-state-disabled">"Like" button in comments</div>
-                                        <div class="card-footer ui-state-disabled"><i>*logos/indicators*</i></div>
-                                    </div>
-                                    <div class="card-filler ui-state-disabled">
-                                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="list mr-3 main">
-                                <div class="mb-3 descriptor">QA</div>
-                                <div class="p-3 layout sortable">
-                                    <div class="card p-2 mb-3 main">
-                                        <div class="card-body ui-state-disabled">Embed all the things</div>
-                                        <div class="card-footer ui-state-disabled"><i>*logos/indicators*</i></div>
-                                    </div>
-                                    <div class="card-filler"></div>
-                                    <div class="card-filler ui-state-disabled">
-                                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
-                                    </div>
-                                </div>
-                            </div>
+<!--                            &lt;!&ndash; TESTING FOR DRAGGABLES &ndash;&gt;-->
 
-                            <!-- END -->
+<!--                            <div class="list mr-3 main">-->
+<!--                                <div class="mb-3 descriptor">In Progress</div>-->
+<!--                                <div class="p-3 layout sortable">-->
+<!--                                    <div class="card p-2 mb-3 main">-->
+<!--                                        <div class="card-body ui-state-disabled">Localization</div>-->
+<!--                                        <div class="card-footer ui-state-disabled"><i>*logos/indicators*</i></div>-->
+<!--                                    </div>-->
+<!--                                    <div class="card p-2 mb-3 main">-->
+<!--                                        <img class="card-img-top ui-state-disabled" src="img/testimg.png"/>-->
+<!--                                        <div class="card-body ui-state-disabled">"Like" button in comments</div>-->
+<!--                                        <div class="card-footer ui-state-disabled"><i>*logos/indicators*</i></div>-->
+<!--                                    </div>-->
+<!--                                    <div class="card-filler ui-state-disabled">-->
+<!--                                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="list mr-3 main">-->
+<!--                                <div class="mb-3 descriptor">QA</div>-->
+<!--                                <div class="p-3 layout sortable">-->
+<!--                                    <div class="card p-2 mb-3 main">-->
+<!--                                        <div class="card-body ui-state-disabled">Embed all the things</div>-->
+<!--                                        <div class="card-footer ui-state-disabled"><i>*logos/indicators*</i></div>-->
+<!--                                    </div>-->
+<!--                                    <div class="card-filler"></div>-->
+<!--                                    <div class="card-filler ui-state-disabled">-->
+<!--                                        <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
 
-                            <div class="list mr-3 main">
-                                <div class="mb-3 descriptor">Ready for launch</div>
-                                <div class="p-3 layout">
-                                    <div class="card-filler"></div>
-                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
-                                </div>
-                            </div>
-                            <div class="list main">
-                                <div class="mb-3 descriptor">Live</div>
-                                <div class="p-3 layout">
-                                    <div class="card-filler"></div>
-                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="section mb-4 main">
-                        <div class="descriptor">MEDIUM COMPLEXITY - 3C APPROACH</div>
-                        <div class="d-flex">
-                            <div class="list mr-3 main">
-                                <div class="mb-3 descriptor">Concern raised</div>
-                                <div class="p-3 layout">
-                                    <div class="card p-2 mb-3 main">
-                                        <img class="card-img-top" src="img/testimg2.png"/>
-                                        <div class="card-body">Work on the same project</div>
-                                        <div class="card-footer"><i>*logos/indicators*</i></div>
-                                    </div>
-                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
-                                </div>
-                            </div>
-                            <div class="list mr-3 main">
-                                <div class="mb-3 descriptor">Contain issue</div>
-                                <div class="p-3 layout">
-                                    <div class="card-filler"></div>
-                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
-                                </div>
-                            </div>
-                            <div class="list mr-3 main">
-                                <div class="mb-3 descriptor">Countermeasure</div>
-                                <div class="p-3 layout">
-                                    <div class="card-filler"></div>
-                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!--                            &lt;!&ndash; END &ndash;&gt;-->
+
+<!--                            <div class="list mr-3 main">-->
+<!--                                <div class="mb-3 descriptor">Ready for launch</div>-->
+<!--                                <div class="p-3 layout">-->
+<!--                                    <div class="card-filler"></div>-->
+<!--                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="list main">-->
+<!--                                <div class="mb-3 descriptor">Live</div>-->
+<!--                                <div class="p-3 layout">-->
+<!--                                    <div class="card-filler"></div>-->
+<!--                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="section mb-4 main">-->
+<!--                        <div class="descriptor">MEDIUM COMPLEXITY - 3C APPROACH</div>-->
+<!--                        <div class="d-flex">-->
+<!--                            <div class="list mr-3 main">-->
+<!--                                <div class="mb-3 descriptor">Concern raised</div>-->
+<!--                                <div class="p-3 layout">-->
+<!--                                    <div class="card p-2 mb-3 main">-->
+<!--                                        <img class="card-img-top" src="img/testimg2.png"/>-->
+<!--                                        <div class="card-body">Work on the same project</div>-->
+<!--                                        <div class="card-footer"><i>*logos/indicators*</i></div>-->
+<!--                                    </div>-->
+<!--                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="list mr-3 main">-->
+<!--                                <div class="mb-3 descriptor">Contain issue</div>-->
+<!--                                <div class="p-3 layout">-->
+<!--                                    <div class="card-filler"></div>-->
+<!--                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="list mr-3 main">-->
+<!--                                <div class="mb-3 descriptor">Countermeasure</div>-->
+<!--                                <div class="p-3 layout">-->
+<!--                                    <div class="card-filler"></div>-->
+<!--                                    <button type="button" class="btn btn-primary"><i class="fas fa-plus"></i></button>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
 <!--            <div class="category pt-3 mr-5 main">-->
 <!--                <div class="descriptor">CATEGORY 3</div>-->
