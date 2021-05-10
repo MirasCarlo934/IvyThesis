@@ -49,8 +49,8 @@
         }
         div.board-category-name-line {
             width: 100%;
-            border-bottom: 1px solid #000;
-            line-height: 0.1em;
+            border-bottom: 0.5px solid #000;
+            line-height: 0.05em;
         }
         .board-category-title-hr {
             border: 1px solid white;
@@ -61,6 +61,8 @@
             background-color: rgba(255, 255, 255, 0.102);
             border-radius: 8px;
             min-width: 298px; /*250 card width + 32 LR list pad + 16 R list margin*/
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
         }
         div.board-section-name {
             padding: 2px 16px 34px 16px;
