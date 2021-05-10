@@ -84,7 +84,7 @@
         }
 
         div.board-list {
-            /*position: relative !important;*/
+            position: relative !important;
             background-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.16);
             border-radius: 8px;
@@ -116,7 +116,7 @@
             background-color: #cccccc;
         }
         div.board-list-content {
-            /*position: relative !important;*/
+            position: relative !important;
             /*z-index: 100 !important;*/
         }
         /*div.board-list-background {*/
@@ -920,7 +920,6 @@
                 let list = resource;
                 let $name = $("<div></div>");
                 let $content = $("<div></div>");
-                let $background = $("<div></div>")
                 // let $dom_class = "board-list d-inline-flex flex-column";
                 let $dom_class = "board-list d-table";
                 let $last;
@@ -942,9 +941,6 @@
                     "class": "board-list-content p-3 d-table ui-state-disabled board-list-sortable",
                     // "class": "p-3 d-inline-flex flex-column ui-state-disabled board-list-sortable"
                 });
-                $background.attr({
-                    "class": "board-list-background"
-                });
                 // add add_btn
                 let $filler = $("<div class='card-filler'></div>");
                 let $add_btn_container = $("<div></div>");
@@ -965,7 +961,7 @@
                     let res = list.children[i];
                     $last = buildResourceDOM(res, $content,  "y", layout_layer + 1);
                 }
-                $background.append($content);
+                // $background.append($content);
                 $name.html(list.name);
                 $dom.append($name);
                 $dom.append($content);
