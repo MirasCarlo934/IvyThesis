@@ -1056,6 +1056,25 @@
             return sel_html;
         }
 
+        function buildSectionSelectorHTML(categoryRes, selectedId = false) {
+            let sections = getResourcesRecursively(categoryRes.children, "section");
+            let sel_html;
+            if (selectedId) {
+                sel_html = "<option value='none'>(Just in current category)</option>";
+            } else {
+                sel_html = "<option value='none' selected>(Just in current category)</option>";
+            }
+            for (let i = 0; i < sections.length; i++) {
+                let section = sections[i];
+                if (selectedId && selectedId === section._id) {
+                    sel_html += "<option value=" + section._id + " selected>" + section.name + "</option>";
+                } else {
+                    sel_html += "<option value=" + section._id + ">" + section.name + "</option>";
+                }
+            }
+            return sel_html;
+        }
+
         function setupJquery() {
 
             // "add" modal configurations
@@ -1223,6 +1242,7 @@
             });
             $(".board-list-name").click(function() {
                 modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
+                let parentRes = getResourceRecursively(context, modalResource.parentId);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
                     let currentParentId = modalResource.parentId;
@@ -1248,13 +1268,30 @@
                     buildDOM(true);
                     Modal.modal.modal("hide");
                 }
-
+                let category = parentRes;
+                if (parentRes.resourceType === "section") {
+                    category = getResourceRecursively(context, parentRes.parentId);
+                    while (category.resourceType !== "category") {
+                        category = getResourceRecursively(context, category.parentId);
+                    }
+                    let section_sel_html = buildSectionSelectorHTML(category, parentRes._id);
+                    Modal.parent_section_sel.html(section_sel_html);
+                    Modal.parent_section.show();
+                    Modal.order_input.attr({
+                        "min": 0,
+                        "max": parentRes.children.length - 1
+                    });
+                } else if (parentRes.resourceType === "category") {
+                    Modal.order_input.attr({
+                        "min": 0,
+                        "max": parentRes.children.length - 1
+                    });
+                }
                 Modal.parent_div.show();
                 Modal.image_div.hide();
-                Modal.parent_category_sel.html(buildCategorySelectorHTML(true));
+                Modal.parent_category_sel.html(buildCategorySelectorHTML(true, category._id));
                 Modal.parent_category.show();
-                Modal.parent_container.hide();
-                Modal.parent_section.hide();
+                Modal.parent_container.hide(); // not needed
                 Modal.delete_btn.show();
                 Modal.title.html("Edit List");
                 Modal.name_input.val(modalResource.name);
@@ -1262,11 +1299,7 @@
                 Modal.desc_input.val(modalResource.description);
                 Modal.desc_div.show();
                 Modal.order_label.html("Horizontal Position: (0 is first)");
-                Modal.order_input.attr({
-                    "min": 0,
-                    "max": context.length
-                })
-                Modal.order_input.val(0);
+                Modal.order_input.val(modalResource.order);
                 Modal.order_div.show();
                 Modal.modal.modal("show");
             });
