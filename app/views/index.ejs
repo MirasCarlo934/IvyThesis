@@ -104,6 +104,7 @@
         /*}*/
         div.board-list-name {
             border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid #cfcfcf;
             background-color: rgb(255, 255, 255);
             cursor: pointer;
             font-size: large;
@@ -199,6 +200,9 @@
             font-weight: bold !important;
             letter-spacing: 1px !important;
             transition: background-color 0.5s;
+        }
+        .btn-dark:hover {
+            background-color: #7f7f7f !important;
         }
         .board-btn-green {
             background-color: #7aec6d !important;
@@ -1005,19 +1009,51 @@
             return $dom;
         }
 
-        function buildCategorySelectorHTML(isList = false) {
+        function buildCategorySelectorHTML(isList = false, selectedId = false) {
             let categories = getResourcesRecursively(context, "category");
             let category_sel_html
-            if (isList) {
-                category_sel_html = "<option value='board' selected>(Just on board)</option>";
+            if (selectedId) {
+                if (isList) {
+                    category_sel_html = "<option value='board'>(Just on board)</option>";
+                } else {
+                    category_sel_html = "<option value='none'>Choose</option>";
+                }
             } else {
-                category_sel_html = "<option value='none' selected>Choose</option>";
+                if (isList) {
+                    category_sel_html = "<option value='board' selected>(Just on board)</option>";
+                } else {
+                    category_sel_html = "<option value='none' selected>Choose</option>";
+                }
             }
             for (let i = 0; i < categories.length; i++) {
                 let parent = categories[i];
-                category_sel_html += "<option value=" + parent._id + ">" + parent.name + "</option>";
+                if (selectedId && parent._id === selectedId) {
+                    category_sel_html += "<option value=" + parent._id + " selected>" + parent.name + "</option>";
+                } else {
+                    category_sel_html += "<option value=" + parent._id + ">" + parent.name + "</option>";
+                }
             }
             return category_sel_html;
+        }
+
+        function buildContainerSelectorHTML(categoryRes, selectedId = false) {
+            let containers = getResourcesRecursively(categoryRes.children, "container");
+            let sel_html;
+            if (selectedId) {
+                sel_html = "<option value='none'>(Just in current category)</option>";
+            } else {
+                sel_html = "<option value='none' selected>(Just in current category)</option>";
+            }
+            for (let i = 0; i < containers.length; i++) {
+                let container = containers[i];
+                let first_section = container.children[0];
+                if (selectedId && selectedId === container._id) {
+                    sel_html += "<option value=" + container._id + " selected>" + first_section.name + "</option>";
+                } else {
+                    sel_html += "<option value=" + container._id + ">" + first_section.name + "</option>";
+                }
+            }
+            return sel_html;
         }
 
         function setupJquery() {
@@ -1099,6 +1135,7 @@
             });
             $(".board-section-name").click(function() {
                 modalResource = getResourceRecursively(context, $(this).attr("id").split("-")[0]);
+                let parentRes = getResourceRecursively(context, modalResource.parentId);
                 $modalResourceDOM = $(this).parent();
                 modalSaveCallback = function() {
                     let currentParentId = modalResource.parentId;
@@ -1149,13 +1186,32 @@
                     deleteEmptyContainersRecursively();
                     Modal.modal.modal("hide");
                 }
-                let category_sel_html = buildCategorySelectorHTML();
-                Modal.parent_div.show();
+                let category = parentRes;
+                if (parentRes.resourceType === "container") {
+                    category = getResourceRecursively(context, parentRes.parentId);
+                    let container_sel_html = buildContainerSelectorHTML(category, parentRes._id);
+                    Modal.parent_container_sel.html(container_sel_html);
+                    Modal.parent_container.show();
+                    Modal.order_label.html("Vertical Position: (0 is first)");
+                    Modal.order_input.attr({
+                        "min": 0,
+                        "max": parentRes.children.length - 1
+                    });
+                } else { // parent is category
+                    Modal.parent_container.hide();
+                    Modal.order_label.html("Horizontal Position: (0 is first)");
+                    Modal.order_input.attr({
+                        "min": 0,
+                        "max": category.children.length - 1
+                    });
+                }
+                let category_sel_html = buildCategorySelectorHTML(false, category._id);
                 Modal.parent_category_sel.html(category_sel_html);
                 Modal.parent_category.show();
-                Modal.parent_container.hide();
-                Modal.parent_section.hide();
-                Modal.order_div.hide();
+                Modal.parent_section.hide(); // not needed
+                Modal.parent_div.show();
+                Modal.order_input.val(modalResource.order);
+                Modal.order_div.show();
                 Modal.delete_btn.show();
                 Modal.title.html("Edit Section");
                 Modal.name_input.val(modalResource.name);
