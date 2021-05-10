@@ -12,6 +12,24 @@
             -o-background-size: cover;
             background-size: cover;
         }
+        div#gradient {
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0));
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            z-index: -1;
+        }
+        div#board {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: scroll;
+            z-index: 1;
+        }
         div {
             font-family: "Nunito", sans-serif;
         }
@@ -36,7 +54,7 @@
         }
         .board-category-title-hr {
             border: 1px solid white;
-            opacity: 0.85;
+            opacity: 1;
         }
 
         div.board-section {
@@ -47,7 +65,7 @@
         div.board-section-name {
             padding: 2px 16px 34px 16px;
             margin-bottom: -32px;
-            background-color: rgba(255, 255, 255, 0.55);
+            background-color: #cfcfcf;
             border-radius: 8px;
             /*backdrop-filter: blur(4px);*/
             /*-webkit-backdrop-filter: blur(4px);*/
@@ -94,14 +112,14 @@
             background-color: #cccccc;
         }
         div.board-list-content {
-            position: relative !important;
-            z-index: 100 !important;
+            /*position: relative !important;*/
+            /*z-index: 100 !important;*/
         }
-        div.board-list-background {
-            position: relative;
-            filter: blur(20px);
-            z-index: -1;
-        }
+        /*div.board-list-background {*/
+        /*    position: relative;*/
+        /*    filter: blur(20px);*/
+        /*    z-index: -1;*/
+        /*}*/
 
         div.board-card {
             /*position: relative !important;*/
@@ -122,8 +140,8 @@
             border-radius: 8px;
             background-color: rgba(255, 255, 255, 0.3);
             box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0.25);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            /*backdrop-filter: blur(4px);*/
+            /*-webkit-backdrop-filter: blur(4px);*/
         }
         button.board-list-add-btn:hover {
             background-color: rgba(255, 255, 255, 0.85);
@@ -407,6 +425,7 @@
             parent_container_sel: $("#board-modal").find("#board-modal-parent-container-select"),
             parent_section: $("#board-modal").find("#board-modal-parent-section"),
             parent_section_sel: $("#board-modal").find("#board-modal-parent-section-select"),
+            save_btn: $("#board-modal-save-btn"),
             delete_btn: $("#board-modal").find("#board-modal-delete-btn")
         }
 
@@ -786,6 +805,7 @@
         function buildDOM(buildNow) {
             builtResources++;
             if (builtResources === totalResources || buildNow) {
+                console.debug("building DOM");
                 let $board_content = $("#board-content");
                 let $last;
                 $board_content.html("");
@@ -793,7 +813,6 @@
                 for (let i = 0; i < context.length; i++) {
                     $last = buildResourceDOM(context[i], $board_content, "x", 0);
                 }
-                deleteEmptyContainersRecursively();
             }
             setupJquery();
         }
@@ -909,7 +928,7 @@
                 });
                 $name.attr({
                     "id": list._id + "-" + "name",
-                    "class": "board-list-name ui-state-disabled mb-3"
+                    "class": "board-list-name ui-state-disabled"
                 });
                 $content.attr({
                     "id": list._id + "-" + "content",
@@ -1125,6 +1144,7 @@
                     $modalResourceDOM.remove();
                     deleteResourceRecursively(context, modalResource._id);
                     buildDOM(true);
+                    deleteEmptyContainersRecursively();
                     Modal.modal.modal("hide");
                 }
                 let category_sel_html = buildCategorySelectorHTML();
@@ -1277,6 +1297,7 @@
                 parent_container_sel: $("#board-modal").find("#board-modal-parent-container-select"),
                 parent_section: $("#board-modal").find("#board-modal-parent-section"),
                 parent_section_sel: $("#board-modal").find("#board-modal-parent-section-select"),
+                save_btn: $("#board-modal-save-btn"),
                 delete_btn: $("#board-modal").find("#board-modal-delete-btn")
             }
         }
@@ -1340,7 +1361,7 @@
                         let reader = new FileReader();
                         reader.onload = function (e) {
                             $("html").css({
-                                "background": "url(" + e.target.result + ") no-repeat center center fixed",
+                                "background": "linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0)), url(" + e.target.result + ") no-repeat center center fixed",
                                 "-webkit-background-size": "cover",
                                 "-moz-background-size": "cover",
                                 "-o-background-size": "cover",
@@ -1408,7 +1429,7 @@
                 modalSaveCallback = function() { // modal callback
                     console.log("adding new section");
                     let parentId;
-                    if (Modal.parent_container.is(":visible") && Modal.parent_container_sel.find("option:selected").val !== "none") {
+                    if (Modal.parent_container.is(":visible") && Modal.parent_container_sel.find("option:selected").val() !== "none") {
                         parentId = Modal.parent_container_sel.find("option:selected").val();
                     } else {
                         parentId = Modal.parent_category_sel.find("option:selected").val();
@@ -1427,10 +1448,13 @@
                         let containerRes = buildResourceObj(buildNewContainerResource(parentId, order), "container");
                         modalResource.order = 0;
                         apiPostResource(host + containersPath, containerRes, function(containerData) {
+                            console.debug("adding new container");
                             addResourceToArray(parentRes.children, containerData);
+                            modalResource.parentId = containerData._id;
                             console.log("new container added");
                             // add section to container
                             apiPostResource(host + containersPath, modalResource, function(sectionData) {
+                                console.debug("adding section to container");
                                 let sectionRes = buildResourceObj(sectionData, "section");
                                 addResourceToArray(containerRes.children, sectionRes);
                                 console.log("new section added");
@@ -1488,9 +1512,6 @@
                         data.resourceType = "list";
                         data.children = [];
                         addResourceToArray(parentRes.children, data);
-                        buildDOM(true);
-                        setupJquery();
-                        apiUpdateResources();
                         console.log("new list added");
                     });
                     Modal.modal.modal("hide");
@@ -1548,11 +1569,12 @@
 <!--<body style="background-image: url('<%=api.host%>/img/background.jpg')">-->
 <!--    <img src="img/testimg.png" alt="Test"/>-->
 <body class="bg-transparent">
-<img id="testimg"/>
-<div class="layout-body container-fluid">
+<div id="body" class="layout-body container-fluid">
 
-    <div id="board-menu" class="position-fixed bottom-0 end-0 p-4">
-        <div id="board-menu-items" class="m-4">
+    <div id="gradient"></div>
+
+    <div id="board-menu" class="position-fixed bottom-0 end-0 p-5">
+        <div id="board-menu-items" class="mb-4">
             <button id="board-menu-change-bg" type="button" class="btn board-btn-menu board-btn-green float-end">Change Background</button><br/><br/>
             <button id="board-menu-add-category" type="button" class="btn board-btn-menu btn-dark float-end">Add a Category</button><br/><br/>
             <button id="board-menu-add-section" type="button" class="btn board-btn-menu btn-dark float-end">Add a Section</button><br/><br/>
@@ -1641,7 +1663,7 @@
         </div>
     </div>
 
-    <div id="board" class="d-flex">
+    <div id="board" class="d-flex p-5">
 <!--        <div class="descriptor">I am a board</div><br/>-->
         <div id="board-content" class="d-flex p-2 layout content board-sortable">
 
