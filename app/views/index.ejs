@@ -128,11 +128,12 @@
 
         div.board-card {
             /*position: relative !important;*/
+            border: 0px !important;
             border-radius: 8px;
             background-color: rgba(255, 255, 255, 0.85);
             box-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.2);
             cursor: pointer;
-            padding: 4px 4px !important;
+            /*padding: 4px 4px !important;*/
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
             /*z-index: 1000 !important;*/
@@ -140,9 +141,12 @@
         div.board-card:hover {
             background-color: #cccccc;
         }
-        /*div.card-body {*/
-        /*    margin: 4px 4px !important;*/
+        /*div.card-img-top {*/
+        /*    border-radius: 8px !important;*/
         /*}*/
+        div.card-body {
+            margin: 4px 4px !important;
+        }
 
         button.board-list-add-btn {
             border-radius: 8px;
@@ -284,6 +288,7 @@
         };
         let modalSaveCallback = function(){}; // the callback function to be called by the modal save button
         let modalDeleteCallback = function(){}; // the callback function to be called by the modal delete button
+        let modalImageRemoveCallback = function(){};
         let modalParentChosenCallback = function() { // the callback function to be called when parent has been chosen from select
             modalParentContainerID = Modal.parent_menu.find("option:selected").val();
             let parentRes = getResourceRecursively(context, modalParentContainerID);
@@ -992,6 +997,10 @@
                         });
                     }
                     reader.readAsDataURL(card.image);
+                } else if (card._id === "6072f166640e425d205060a0") {
+                    $img.attr({
+                        "src": "/img/testimg.png"
+                    });
                 }
                 $body.html(card.name);
                 if (card.hasOwnProperty("description") && card.description.length > 0) {
@@ -1330,6 +1339,12 @@
                     deleteResourceRecursively(context, modalResource._id);
                     Modal.modal.modal("hide");
                 }
+                modalImageRemoveCallback = function() {
+                    $modalResourceDOM.find(".card-img-top").attr({
+                        "src": ""
+                    });
+                    Modal.modal.modal("hide");
+                }
                 Modal.parent_div.hide();
                 Modal.image_input.val("");
                 Modal.image_div.show();
@@ -1408,6 +1423,9 @@
             });
             $("#board-modal-delete-btn").click(function() {
                 modalDeleteCallback();
+            });
+            $("#board-modal-image-remove").click(function() {
+                modalImageRemoveCallback();
             });
             $("#board-modal-parent-menu").on("change", function() {
                 modalParentChosenCallback();
@@ -1707,7 +1725,8 @@
                             <label for="board-modal-image-input" class="modal-label col-form-label">
                                 <img src="icons/description.svg" style="width:16px;"/> <b>Set image</b>
                             </label>
-                            <input type="file" id="board-modal-image-input" accept="image/*"/>
+                        <input type="file" id="board-modal-image-input" accept="image/*"/>
+                        <button type="button" class="btn board-btn btn-danger mt-3" id="board-modal-image-remove">Remove Current Image</button>
                         </div>
                         <div id="board-modal-parent" class="mb-3">
                             <label class="modal-label col-form-label"><b>Place under</b></label>
