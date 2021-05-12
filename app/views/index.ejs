@@ -141,9 +141,10 @@
         div.board-card:hover {
             background-color: #cccccc;
         }
-        /*div.card-img-top {*/
-        /*    border-radius: 8px !important;*/
-        /*}*/
+        .card-img, .card-img-top {
+            border-top-left-radius: 8px !important;
+            border-top-right-radius: 8px !important;
+        }
         div.card-body {
             margin: 4px 4px !important;
         }
@@ -1524,6 +1525,7 @@
                 Modal.parent_div.hide();
                 Modal.image_div.hide();
                 Modal.order_input.show();
+                Modal.order_label.html("Horizontal Position: (0 is first)");
                 Modal.order_div.show();
                 Modal.delete_btn.hide();
                 Modal.title.html("Add a Category");
@@ -1726,7 +1728,7 @@
                                 <img src="icons/description.svg" style="width:16px;"/> <b>Set image</b>
                             </label>
                         <input type="file" id="board-modal-image-input" accept="image/*"/>
-                        <button type="button" class="btn board-btn btn-danger mt-3" id="board-modal-image-remove">Remove Current Image</button>
+                        <input type="button" class="mt-3" id="board-modal-image-remove" value="Remove Current Image"/>
                         </div>
                         <div id="board-modal-parent" class="mb-3">
                             <label class="modal-label col-form-label"><b>Place under</b></label>
