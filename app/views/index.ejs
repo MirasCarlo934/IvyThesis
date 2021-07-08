@@ -1546,6 +1546,7 @@
                     } else {
                         parentId = Modal.parent_category_sel.find("option:selected").val();
                     }
+                    console.debug(parentId);
                     let parentRes = getResourceRecursively(context, parentId);
                     let order = parseInt(Modal.order_input.val());
                     if (order > parentRes.children.length + 1) {
@@ -1580,6 +1581,7 @@
                             console.log("new section added");
                         });
                     }
+                    buildDOM(true);
                     Modal.modal.modal("hide");
                 }
                 let category_sel_html = buildCategorySelectorHTML();
